@@ -1,0 +1,100 @@
+{
+  "expo": {
+    "name": "Go Solar Me",
+    "slug": "go-solar-me-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "gosolarme",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "ng.solarbuilders.gosolarme",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "usesAppleSignIn": true,
+      "associatedDomains": [
+        "applinks:solar.nexprove.com"
+      ]
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png",
+        "backgroundColor": "#10213B"
+      },
+      "package": "ng.solarbuilders.gosolarme",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "solar.nexprove.com",
+              "pathPrefix": "/fund"
+            },
+            {
+              "scheme": "https",
+              "host": "solar.nexprove.com",
+              "pathPrefix": "/b"
+            },
+            {
+              "scheme": "https",
+              "host": "solar.nexprove.com",
+              "pathPrefix": "/s"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-secure-store",
+      "expo-web-browser",
+      "expo-apple-authentication",
+      [
+        "expo-notifications",
+        {
+          "color": "#10213B"
+        }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.REPLACE_WITH_IOS_CLIENT_ID_PREFIX"
+        }
+      ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "",
+          "enableGooglePay": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "resizeMode": "contain",
+          "backgroundColor": "#10213B"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {}
+  }
+}
