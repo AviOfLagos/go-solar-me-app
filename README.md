@@ -30,7 +30,7 @@ npx expo-doctor               # 21/21
 |---|---|
 | `EXPO_PUBLIC_API_BASE` | `.env` / `eas.json`. Default `https://solar.nexprove.com/api/v1` |
 | `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | `.env`. Already set; Android sign-in uses it |
-| `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` | `.env`. **Blank until created.** Also replace `iosUrlScheme` in `app.json` (the reversed iOS client ID) |
+| `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` | Set (default in `src/lib/config.ts`; `iosUrlScheme` in `app.json` matches) |
 | Stripe publishable key | Comes from `GET /payments`; never in the app |
 | `google-services.json` | Needed for Android push only (FCM via EAS) |
 
@@ -67,7 +67,7 @@ Universal links need `/.well-known/apple-app-site-association` and `assetlinks.j
 
 ## Still to do (owner: Avi)
 
-1. Create the Google **iOS** OAuth client → set `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` and `iosUrlScheme`; add the ID to `GOOGLE_CLIENT_IDS` in Vercel.
+1. ~~Google iOS client~~ done (`30374421318-ah8q…`). Add it to `GOOGLE_CLIENT_IDS` in Vercel if not there.
 2. First EAS Android build → `eas credentials` → SHA-1 → create the Google **Android** client → add to `GOOGLE_CLIENT_IDS`.
 3. Apple Developer / Play accounts, store listings, live payment keys.
 4. Device test with the Paystack and Stripe test cards.
