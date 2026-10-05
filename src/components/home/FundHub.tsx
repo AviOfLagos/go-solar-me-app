@@ -1,67 +1,85 @@
-import { Pressable, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { Button, Card, H2, Loading, P, Progress, Small } from "@/ui";
-import { Hero, Tile } from "@/components/Hero";
-import { OpenLink } from "@/components/OpenLink";
+import { Button, Loading, P, Progress, Section, Small } from "@/ui";
+import { LinkRow, StartCard, Tile } from "@/components/Hero";
 import { useMine, POOL_STATUS } from "@/lib/pools";
 import { useAuth } from "@/stores/auth";
 import { naira } from "@/shared/format";
+import type { PoolSummary } from "@/lib/types";
 import { colors, fonts } from "@/theme";
 
-const STEPS: [keyof typeof Ionicons.glyphMap, string][] = [
-  ["cube-outline", "Pick the kit"],
-  ["logo-whatsapp", "Share the page"],
-  ["cash-outline", "Anyone chips in from ₦1,000"],
-  ["checkmark-done-outline", "At 100% we deliver and install"],
-];
+const MILESTONES = [25, 50, 75, 100];
 
-/** Go Solar Me: start a page or a squad split, see your pages, open someone's link. */
-export function FundHub({ hero = true }: { hero?: boolean }) {
+/** A page's progress with its milestones lit up as they're reached. */
+export function PoolCard({ p }: { p: PoolSummary }) {
+  const pct = Math.min(100, Math.round((p.raised / p.goal) * 100));
+  return (
+    <Pressable onPress={() => router.push({ pathname: "/fund/[id]", params: { id: p.id } })}
+      style={({ pressed }) => ({ padding: 18, gap: 10, borderRadius: 24, backgroundColor: colors.paper, opacity: pressed ? 0.9 : 1 })}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: fonts.sansBold, fontSize: 15, color: colors.ink }} numberOfLines={1}>{p.title}</Text>
+          <Small>{POOL_STATUS[p.status] ?? p.status}</Small>
+        </View>
+        <Text style={{ fontFamily: fonts.light, fontSize: 26, color: colors.ink }}>{pct}%</Text>
+      </View>
+      <Progress value={p.raised / p.goal} />
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+        <Small>{naira(p.raised)} of {naira(p.goal)}</Small>
+        <View style={{ flexDirection: "row", gap: 4 }}>
+          {MILESTONES.map((m) => (
+            <View key={m} style={{ paddingHorizontal: 7, paddingVertical: 2, borderRadius: 999, backgroundColor: pct >= m ? colors.mint : colors.haze }}>
+              <Text style={{ fontFamily: fonts.sansBold, fontSize: 10, color: pct >= m ? colors.ink : colors.mute }}>{m}%</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+/** Go Solar Me: one main action (start a page), two smaller ways, then your pages. */
+export function FundHub() {
   const user = useAuth((s) => s.user);
   const mine = useMine();
+  const pools = mine.data?.pools ?? [];
   return (
     <>
-      {hero ? (
-        <Hero kicker="Go Solar Me" icon="people" title="Go solar together." sub="Family, friends or the public fund the kit. Every naira goes to the kit, never cash." />
+      {pools.length ? (
+        <>
+          <Section title="Your pages" />
+          {pools.map((p) => <PoolCard key={p.id} p={p} />)}
+        </>
       ) : null}
-      <View style={{ flexDirection: "row", gap: 12 }}>
-        <Tile tone="sun" icon="megaphone-outline" title="Start a page" sub="Anyone can chip in" onPress={() => router.push("/fund/new")} />
-        <Tile icon="git-branch-outline" title="Split with squad" sub="2–10 equal shares" onPress={() => router.push({ pathname: "/fund/new", params: { kind: "squad" } })} />
-      </View>
-      <View style={{ flexDirection: "row", gap: 12 }}>
-        <Tile icon="calendar-outline" title="Pay small small" sub="Spread it over months" onPress={() => router.push("/pay-small-small")} />
-        <Tile icon="ticket-outline" title="Gift card" sub="Give solar credit" onPress={() => router.push("/gift-cards")} />
-      </View>
-
-      <Card>
-        <P style={{ fontFamily: fonts.sansSemiBold, color: colors.ink }}>How it works</P>
-        {STEPS.map(([icon, text], i) => (
-          <View key={text} style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
-            <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: colors.sunTint, alignItems: "center", justifyContent: "center" }}>
-              <Ionicons name={icon} size={15} color={colors.ink} />
+      <StartCard
+        scene="group"
+        meta="Takes about 2 minutes"
+        title="Go solar together."
+        sub="Pick a kit and share one link. Family, friends or anyone can chip in from ₦1,000. At 100% we deliver and install."
+        cta="Start a page"
+        onPress={() => router.push("/fund/new")}
+      >
+        <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
+          {[["shield-checkmark-outline", "Money goes to the kit, never cash"], ["refresh-outline", "Refunds if it isn't funded"]].map(([i, t]) => (
+            <View key={t} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Ionicons name={i as keyof typeof Ionicons.glyphMap} size={14} color={colors.mintDeep} />
+              <Small>{t}</Small>
             </View>
-            <P style={{ flex: 1 }}>{i + 1}. {text}</P>
-          </View>
-        ))}
-        <Small>Not funded by the deadline? Extend once, switch to a smaller kit, or cancel and everyone is refunded.</Small>
-      </Card>
-
-      <H2>My pages</H2>
+          ))}
+        </View>
+      </StartCard>
+      <View style={{ flexDirection: "row", gap: 12 }}>
+        <Tile tone="lemon" icon="git-branch-outline" title="Split with squad" sub="2–10 equal shares" onPress={() => router.push({ pathname: "/fund/new", params: { kind: "squad" } })} />
+        <Tile icon="calendar-outline" title="Pay small small" sub="Part now, rest monthly" onPress={() => router.push("/pay-small-small")} />
+      </View>
       {!user ? (
-        <Card>
-          <P>Sign in to start a page and see how it's going.</P>
-          <Button title="Sign in" kind="ink" small onPress={() => router.push("/sign-in")} />
-        </Card>
-      ) : mine.isPending ? <Loading /> : !mine.data?.pools.length ? <P>None yet. Start one above.</P> : mine.data.pools.map((p) => (
-        <Pressable key={p.id} onPress={() => router.push({ pathname: "/fund/[id]", params: { id: p.id } })} style={{ padding: 14, gap: 6, borderRadius: 14, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line }}>
-          <P style={{ fontFamily: fonts.sansSemiBold, color: colors.ink }}>{p.title}</P>
-          <Progress value={p.raised / p.goal} />
-          <Small>{naira(p.raised)} of {naira(p.goal)} · {POOL_STATUS[p.status] ?? p.status}</Small>
-        </Pressable>
-      ))}
-
-      <Card><OpenLink label="Open a page someone sent you" placeholder="solar.nexprove.com/fund/… or a code" /></Card>
+        <View style={{ backgroundColor: colors.paper, borderRadius: 24, padding: 18, gap: 10 }}>
+          <P>Sign in to start a page and follow how it's going.</P>
+          <Button title="Sign in" kind="ghost" small onPress={() => router.push("/sign-in")} />
+        </View>
+      ) : mine.isPending ? <Loading /> : null}
+      <LinkRow label="Open a page someone sent you" />
     </>
   );
 }

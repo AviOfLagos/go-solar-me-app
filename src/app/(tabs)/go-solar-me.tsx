@@ -8,7 +8,7 @@ export default function GoSolarMeTab() {
   const user = useAuth((s) => s.user);
   const mine = useMine();
   return (
-    <Screen refreshControl={user ? <RefreshControl refreshing={mine.isRefetching} onRefresh={() => mine.refetch()} /> : undefined}>
+    <Screen tab refreshControl={user ? <RefreshControl refreshing={mine.isRefetching} onRefresh={() => mine.refetch()} /> : undefined}>
       <FundHub />
     </Screen>
   );

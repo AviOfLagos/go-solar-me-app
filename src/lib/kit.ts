@@ -28,3 +28,6 @@ export function giftSplit(total: number, balance: number, minCharge = 1000) {
 }
 
 export const asString = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
+
+/** "1 item", "3 items". */
+export const itemsLabel = (n: number) => `${n} item${n === 1 ? "" : "s"}`;

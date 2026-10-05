@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { RefreshControl, View } from "react-native";
+import { RefreshControl, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, Card, Check, Chip, ErrorBox, Field, H1, H3, Label, Loading, Money, Notice, P, Progress, Row, Screen, Small } from "@/ui";
+import { Button, Card, Check, Chip, ErrorBox, Field, H1, H3, Label, Loading, Money, Notice, P, Row, Screen, Small } from "@/ui";
 import { MethodPicker, defaultMethod, type Method } from "@/components/PayMethod";
 import { usePool, daysLeft, POOL_STATUS } from "@/lib/pools";
 import { usePay, usePayOptions } from "@/lib/pay";
@@ -14,7 +15,7 @@ import { sharePicture } from "@/lib/share";
 import { SITE } from "@/lib/config";
 import { naira, isEmail, isName } from "@/shared/format";
 import { OCCASIONS, POOL } from "@/shared/store";
-import { colors } from "@/theme";
+import { colors, fonts } from "@/theme";
 import type { Pool, PayStart } from "@/lib/types";
 
 export default function PoolScreen() {
@@ -28,21 +29,36 @@ export default function PoolScreen() {
   const open = p.status === "open" || p.status === "ended";
   const share = () => sharePicture("pool", p.id, p.kind === "squad" ? `Pay your share for "${p.title}":` : `Help with "${p.title}". Chip in any amount:`, `${SITE}/fund/${p.id}`);
 
+  const pct = Math.min(100, Math.floor((p.raised / p.goal) * 100));
   return (
     <Screen edges={[]} refreshControl={<RefreshControl refreshing={pool.isRefetching} onRefresh={() => pool.refetch()} />}>
       <Stack.Screen options={{ title: p.kind === "squad" ? "Squad split" : "Go Solar Me" }} />
       {q.created ? <Notice tone="leaf">Your page is live. Share it on WhatsApp to get the first chip-in.</Notice> : null}
-      <Small style={{ color: colors.sunDeep }}>{OCCASIONS.find((o) => o.slug === p.occasion)?.label ?? ""}</Small>
+      <Small style={{ color: colors.mintDeep, fontFamily: fonts.sansSemiBold }}>{OCCASIONS.find((o) => o.slug === p.occasion)?.label ?? ""}</Small>
       <H1>{p.title}</H1>
-      <Card>
-        <Row style={{ justifyContent: "space-between", alignItems: "baseline" }}>
-          <Money n={p.raised} style={{ fontSize: 24 }} />
-          <Small>of {naira(p.goal)}</Small>
+      <View style={{ backgroundColor: colors.night, borderRadius: 28, padding: 20, gap: 14 }}>
+        <Row style={{ justifyContent: "space-between", alignItems: "flex-end" }}>
+          <View>
+            <Small style={{ color: "#AEB8B1" }}>Raised</Small>
+            <Text style={{ fontFamily: fonts.light, fontSize: 34, color: colors.paper, letterSpacing: -0.8 }}>{naira(p.raised)}</Text>
+            <Small style={{ color: "#AEB8B1" }}>of {naira(p.goal)}</Small>
+          </View>
+          <Text style={{ fontFamily: fonts.light, fontSize: 40, color: colors.mint }}>{pct}%</Text>
         </Row>
-        <Progress value={p.raised / p.goal} />
-        <Small>{Math.floor((p.raised / p.goal) * 100)}% · {p.status === "open" ? daysLeft(p.deadline) : POOL_STATUS[p.status]} · {p.supporters.length} supporter{p.supporters.length === 1 ? "" : "s"} · {p.lga}</Small>
-        <Button title="Share on WhatsApp" kind="ink" onPress={share} />
-      </Card>
+        <View style={{ height: 10, borderRadius: 5, backgroundColor: colors.nightSoft, overflow: "hidden" }}>
+          <View style={{ height: 10, width: `${pct}%`, borderRadius: 5, backgroundColor: colors.mint }} />
+        </View>
+        <Row style={{ justifyContent: "space-between" }}>
+          {[25, 50, 75, 100].map((m) => (
+            <View key={m} style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999, backgroundColor: pct >= m ? colors.mint : colors.nightSoft }}>
+              <Ionicons name={pct >= m ? (m === 100 ? "sunny" : "checkmark") : "ellipse-outline"} size={12} color={pct >= m ? colors.ink : "#7E8A83"} />
+              <Text style={{ fontFamily: fonts.sansBold, fontSize: 11, color: pct >= m ? colors.ink : "#AEB8B1" }}>{m}%</Text>
+            </View>
+          ))}
+        </Row>
+        <Small style={{ color: "#AEB8B1" }}>{p.status === "open" ? daysLeft(p.deadline) : POOL_STATUS[p.status]} · {p.supporters.length} supporter{p.supporters.length === 1 ? "" : "s"} · {p.lga}</Small>
+        <Button title="Share on WhatsApp" kind="sun" icon="logo-whatsapp" onPress={share} />
+      </View>
 
       {p.isOwner ? <OwnerPanel p={p} onChange={() => pool.refetch()} /> : null}
       {open ? <Contribute p={p} /> : p.status === "funded" ? <Notice tone="leaf">Funded! {p.order ? `The order is ${p.order.status.replace(/_/g, " ")}.` : "We're placing the order."}</Notice> : <Notice>This page is closed. Everyone who chipped in was refunded.</Notice>}

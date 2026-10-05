@@ -5,7 +5,8 @@ import {
 } from "react-native";
 import { SafeAreaView, type Edge } from "react-native-safe-area-context";
 import { Image } from "expo-image";
-import { colors, fonts, radii, space, MIN_TOUCH } from "@/theme";
+import { Ionicons } from "@expo/vector-icons";
+import { colors, fonts, radii, space, MIN_TOUCH, TAB_SPACE } from "@/theme";
 import { naira } from "@/shared/format";
 
 /* ---------- text ---------- */
@@ -21,14 +22,16 @@ export const Money = ({ n, style }: { n: number; style?: StyleProp<TextStyle> })
 
 /* ---------- layout ---------- */
 
-export function Screen({ children, scroll = true, edges = ["top"], contentStyle, refreshControl, footer }: {
+export function Screen({ children, scroll = true, edges = ["top"], contentStyle, refreshControl, footer, tab }: {
   children: ReactNode; scroll?: boolean; edges?: Edge[]; contentStyle?: StyleProp<ViewStyle>;
   refreshControl?: ScrollViewProps["refreshControl"]; footer?: ReactNode;
+  /** A tab screen: leaves room for the floating tab bar. */
+  tab?: boolean;
 }) {
   return (
     <SafeAreaView style={s.screen} edges={edges}>
       {scroll ? (
-        <ScrollView contentContainerStyle={[s.content, contentStyle]} keyboardShouldPersistTaps="handled" refreshControl={refreshControl}>
+        <ScrollView contentContainerStyle={[s.content, tab && { paddingBottom: TAB_SPACE }, contentStyle]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" refreshControl={refreshControl}>
           {children}
         </ScrollView>
       ) : (
@@ -40,7 +43,7 @@ export function Screen({ children, scroll = true, edges = ["top"], contentStyle,
 }
 
 export const Card = ({ children, style, highlight }: { children: ReactNode; style?: StyleProp<ViewStyle>; highlight?: boolean }) => (
-  <View style={[s.card, highlight && { borderColor: colors.ink, borderWidth: 2 }, style]}>{children}</View>
+  <View style={[s.card, highlight && { borderColor: colors.ink, borderWidth: 1.5 }, style]}>{children}</View>
 );
 export const Row = ({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) => <View style={[s.row, style]}>{children}</View>;
 export const Gap = ({ h = space.md }: { h?: number }) => <View style={{ height: h }} />;
@@ -49,10 +52,12 @@ export const Gap = ({ h = space.md }: { h?: number }) => <View style={{ height: 
 
 type BtnProps = Omit<PressableProps, "children" | "style"> & {
   title: string; kind?: "sun" | "ink" | "ghost" | "danger"; busy?: boolean; style?: StyleProp<ViewStyle>; small?: boolean;
+  /** Ionicons name shown after the title (e.g. "arrow-forward"). */
+  icon?: keyof typeof Ionicons.glyphMap;
 };
-export function Button({ title, kind = "sun", busy, disabled, style, small, ...rest }: BtnProps) {
+export function Button({ title, kind = "ink", busy, disabled, style, small, icon, ...rest }: BtnProps) {
   const off = disabled || busy;
-  const bg = kind === "sun" ? colors.sun : kind === "ink" ? colors.ink : kind === "danger" ? colors.flare : colors.paper;
+  const bg = kind === "sun" ? colors.mint : kind === "ink" ? colors.ink : kind === "danger" ? colors.flare : colors.paper;
   const fg = kind === "ink" || kind === "danger" ? colors.paper : colors.ink;
   return (
     <Pressable
@@ -65,7 +70,12 @@ export function Button({ title, kind = "sun", busy, disabled, style, small, ...r
       ]}
       {...rest}
     >
-      {busy ? <ActivityIndicator color={fg} /> : <Text style={[s.btnText, small && { fontSize: 14 }, { color: fg }]}>{title}</Text>}
+      {busy ? <ActivityIndicator color={fg} /> : (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <Text style={[s.btnText, small && { fontSize: 14 }, { color: fg }]}>{title}</Text>
+          {icon ? <Ionicons name={icon} size={small ? 16 : 18} color={fg} /> : null}
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -131,6 +141,68 @@ export function Stepper({ value, onChange, max = 50 }: { value: number; onChange
   );
 }
 
+/** "Step 2 of 3" with a progress bar and an optional back arrow. Counts down near the end. */
+export function StepBar({ step, total, onBack, label }: { step: number; total: number; onBack?: () => void; label?: string }) {
+  const left = total - step;
+  return (
+    <View style={{ gap: 10 }}>
+      <View style={[s.row, { justifyContent: "space-between" }]}>
+        {onBack ? (
+          <Pressable onPress={onBack} hitSlop={12} accessibilityRole="button" accessibilityLabel="Back" style={s.iconBtn}>
+            <Ionicons name="arrow-back" size={20} color={colors.ink} />
+          </Pressable>
+        ) : <View style={{ width: 40 }} />}
+        <Small style={{ fontFamily: fonts.sansSemiBold, color: colors.ink2 }}>
+          {label ?? (left === 0 ? "Last step" : step === 1 ? `Step 1 of ${total}` : left === 1 ? "1 step left" : `Step ${step} of ${total}`)}
+        </Small>
+        <View style={{ width: 40 }} />
+      </View>
+      <View style={{ flexDirection: "row", gap: 6 }} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: step }}>
+        {Array.from({ length: total }, (_, i) => (
+          <View key={i} style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: i < step ? colors.ink : colors.line }} />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+/** A big tappable answer with an icon. Used for one-question-per-screen steps. */
+export function OptionCard({ icon, title, sub, on, onPress, right }: {
+  icon?: keyof typeof Ionicons.glyphMap; title: string; sub?: string; on?: boolean; onPress: () => void; right?: ReactNode;
+}) {
+  return (
+    <Pressable onPress={onPress} accessibilityRole="radio" accessibilityState={{ checked: !!on }}
+      style={({ pressed }) => [s.option, on && { borderColor: colors.ink, backgroundColor: colors.mintTint }, pressed && { transform: [{ scale: 0.985 }] }]}>
+      {icon ? (
+        <View style={[s.optionIcon, on && { backgroundColor: colors.mint }]}>
+          <Ionicons name={icon} size={22} color={colors.ink} />
+        </View>
+      ) : null}
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text style={s.optionTitle}>{title}</Text>
+        {sub ? <Small numberOfLines={2}>{sub}</Small> : null}
+      </View>
+      {right ?? <Ionicons name={on ? "checkmark-circle" : "ellipse-outline"} size={24} color={on ? colors.ink : colors.line} />}
+    </Pressable>
+  );
+}
+
+/** A small rounded label, e.g. "Suggested" or "Saves ₦96,000/mo". */
+export const Tag = ({ label, tone = "mint" }: { label: string; tone?: "mint" | "lemon" | "ink" | "line" }) => (
+  <View style={{ alignSelf: "flex-start", borderRadius: radii.pill, paddingHorizontal: 10, paddingVertical: 4,
+    backgroundColor: tone === "mint" ? colors.mint : tone === "lemon" ? colors.lemon : tone === "ink" ? colors.ink : colors.paper }}>
+    <Text style={{ fontFamily: fonts.sansBold, fontSize: 12, color: tone === "ink" ? colors.paper : colors.ink }}>{label}</Text>
+  </View>
+);
+
+/** Section title with an optional action on the right ("See all"). */
+export const Section = ({ title, action, onAction }: { title: string; action?: string; onAction?: () => void }) => (
+  <View style={[s.row, { justifyContent: "space-between", marginTop: 4 }]}>
+    <H3 style={{ fontFamily: fonts.sansBold }}>{title}</H3>
+    {action ? <Small onPress={onAction} style={{ fontFamily: fonts.sansSemiBold, color: colors.ink }}>{action}</Small> : null}
+  </View>
+);
+
 /* ---------- states ---------- */
 
 export const Loading = ({ label = "Loading…" }: { label?: string }) => (
@@ -138,12 +210,12 @@ export const Loading = ({ label = "Loading…" }: { label?: string }) => (
 );
 export const ErrorBox = ({ message, onRetry }: { message: string; onRetry?: () => void }) => (
   <View style={s.errorBox} accessibilityRole="alert">
-    <Text style={[s.p, { color: colors.flare }]}>{message}</Text>
+    <Text style={[s.p, { color: colors.flare, fontFamily: fonts.sansMedium }]}>{message}</Text>
     {onRetry ? <Button title="Try again" kind="ghost" small onPress={onRetry} style={{ alignSelf: "flex-start" }} /> : null}
   </View>
 );
 export const Notice = ({ children, tone = "sun" }: { children: ReactNode; tone?: "sun" | "leaf" }) => (
-  <View style={[s.notice, { backgroundColor: tone === "leaf" ? colors.leafTint : colors.sunTint }]}>
+  <View style={[s.notice, { backgroundColor: tone === "leaf" ? colors.leafTint : colors.lemonTint }]}>
     {isValidElement(children) ? children : <P>{children}</P>}
   </View>
 );
@@ -156,7 +228,7 @@ export const Empty = ({ title, text, action }: { title: string; text?: string; a
 );
 
 export const ProductImage = ({ uri, size = 64 }: { uri: string; size?: number }) => (
-  <View style={{ width: size, height: size, borderRadius: 10, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.paper, overflow: "hidden" }}>
+  <View style={{ width: size, height: size, borderRadius: 16, borderWidth: 0, borderColor: colors.line, backgroundColor: colors.paper, overflow: "hidden" }}>
     <Image source={{ uri }} style={{ flex: 1 }} contentFit="contain" transition={150} accessibilityIgnoresInvertColors />
   </View>
 );
@@ -174,30 +246,34 @@ export const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.haze },
   content: { padding: space.md, gap: space.md, paddingBottom: space.xl },
   footer: { padding: space.md, borderTopWidth: 1, borderTopColor: colors.line, backgroundColor: colors.paper, gap: space.sm },
-  h1: { fontFamily: fonts.displayBold, fontSize: 30, lineHeight: 34, color: colors.ink },
-  h2: { fontFamily: fonts.displayBold, fontSize: 22, lineHeight: 27, color: colors.ink },
-  h3: { fontFamily: fonts.display, fontSize: 18, lineHeight: 23, color: colors.ink },
-  p: { fontFamily: fonts.sans, fontSize: 15, lineHeight: 21, color: colors.ink2 },
+  h1: { fontFamily: fonts.light, fontSize: 32, lineHeight: 38, color: colors.ink, letterSpacing: -0.5 },
+  h2: { fontFamily: fonts.sansSemiBold, fontSize: 22, lineHeight: 28, color: colors.ink, letterSpacing: -0.2 },
+  h3: { fontFamily: fonts.sansSemiBold, fontSize: 17, lineHeight: 23, color: colors.ink },
+  p: { fontFamily: fonts.sans, fontSize: 15, lineHeight: 22, color: colors.ink2 },
   small: { fontFamily: fonts.sans, fontSize: 13, lineHeight: 18, color: colors.mute },
   label: { fontFamily: fonts.sansSemiBold, fontSize: 14, color: colors.ink },
+  iconBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.paper, alignItems: "center", justifyContent: "center" },
+  option: { flexDirection: "row", gap: 14, alignItems: "center", padding: 16, borderRadius: 22, backgroundColor: colors.paper, borderWidth: 1.5, borderColor: colors.paper },
+  optionIcon: { width: 46, height: 46, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: colors.haze },
+  optionTitle: { fontFamily: fonts.sansBold, fontSize: 16, color: colors.ink },
   money: { fontFamily: fonts.sansBold, fontSize: 16, color: colors.ink, fontVariant: ["tabular-nums"] },
-  card: { backgroundColor: colors.paper, borderRadius: radii.card, borderWidth: 1, borderColor: colors.line, padding: space.md, gap: space.sm },
+  card: { backgroundColor: colors.paper, borderRadius: radii.card, padding: 18, gap: space.sm },
   row: { flexDirection: "row", alignItems: "center", gap: space.sm },
-  btn: { minHeight: 50, borderRadius: radii.input, alignItems: "center", justifyContent: "center", paddingHorizontal: space.md },
-  btnSmall: { minHeight: MIN_TOUCH, paddingHorizontal: 14 },
-  btnText: { fontFamily: fonts.sansBold, fontSize: 16 },
-  input: { minHeight: 48, borderWidth: 1, borderColor: colors.line, borderRadius: radii.input, backgroundColor: colors.paper, paddingHorizontal: 14, fontFamily: fonts.sans, fontSize: 16, color: colors.ink },
-  chip: { minHeight: MIN_TOUCH, paddingHorizontal: 14, paddingVertical: 10, borderRadius: radii.pill, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.paper, justifyContent: "center" },
+  btn: { minHeight: 54, borderRadius: radii.pill, alignItems: "center", justifyContent: "center", paddingHorizontal: 22 },
+  btnSmall: { minHeight: MIN_TOUCH, paddingHorizontal: 18 },
+  btnText: { fontFamily: fonts.sansBold, fontSize: 16, letterSpacing: 0.1 },
+  input: { minHeight: 52, borderWidth: 1, borderColor: colors.line, borderRadius: radii.input, backgroundColor: colors.paper, paddingHorizontal: 16, fontFamily: fonts.sansMedium, fontSize: 16, color: colors.ink },
+  chip: { minHeight: MIN_TOUCH, paddingHorizontal: 16, paddingVertical: 10, borderRadius: radii.pill, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.paper, justifyContent: "center" },
   chipText: { fontFamily: fonts.sansMedium, fontSize: 14, color: colors.ink },
-  choice: { flex: 1, minHeight: 64, borderWidth: 1, borderColor: colors.line, borderRadius: 12, padding: 12, backgroundColor: colors.paper, gap: 2 },
+  choice: { flex: 1, minHeight: 64, borderWidth: 1.5, borderColor: colors.line, borderRadius: 18, padding: 14, backgroundColor: colors.paper, gap: 2 },
   choiceTitle: { fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.ink },
   check: { flexDirection: "row", alignItems: "center", gap: 10, minHeight: MIN_TOUCH },
-  box: { width: 24, height: 24, borderRadius: 6, borderWidth: 1.5, borderColor: colors.mute, alignItems: "center", justifyContent: "center" },
+  box: { width: 24, height: 24, borderRadius: 8, borderWidth: 1.5, borderColor: colors.mute, alignItems: "center", justifyContent: "center" },
   step: { width: MIN_TOUCH, height: MIN_TOUCH, alignItems: "center", justifyContent: "center" },
   stepText: { fontFamily: fonts.sansBold, fontSize: 20, color: colors.ink },
   center: { alignItems: "center", justifyContent: "center", gap: space.sm, padding: space.lg },
-  errorBox: { backgroundColor: colors.flareTint, borderRadius: 12, padding: 12, gap: space.sm },
-  notice: { borderRadius: 12, padding: 12 },
-  track: { height: 10, borderRadius: 5, backgroundColor: colors.haze, overflow: "hidden" },
-  bar: { height: 10, borderRadius: 5, backgroundColor: colors.sun },
+  errorBox: { backgroundColor: colors.flareTint, borderRadius: 16, padding: 14, gap: space.sm },
+  notice: { borderRadius: 16, padding: 14 },
+  track: { height: 10, borderRadius: 5, backgroundColor: colors.line, overflow: "hidden" },
+  bar: { height: 10, borderRadius: 5, backgroundColor: colors.mintDeep },
 });

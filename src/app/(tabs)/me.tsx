@@ -39,7 +39,7 @@ export default function MeTab() {
   };
 
   return (
-    <Screen>
+    <Screen tab>
       <H1>{user ? `Hi, ${user.name.split(" ")[0] || "there"}` : "Me"}</H1>
       {user ? <Small>{user.email}</Small> : (
         <Card>

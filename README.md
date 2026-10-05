@@ -59,6 +59,10 @@ src/ui/             design-system components
 src/shared/         format + store constants copied from the web repo
 ```
 
+## Design
+
+Look, UX rules and the gamification we use (and avoid) are in [`docs/DESIGN.md`](docs/DESIGN.md). Read it before adding a screen.
+
 ## Rules the code follows
 
 - Money is whole naira; the app never sends prices, only `expectedTotal`.

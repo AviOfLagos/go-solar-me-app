@@ -12,6 +12,7 @@ import { SITE, waLink } from "@/lib/config";
 import { useCart } from "@/stores/cart";
 import { naira, ngLocal } from "@/shared/format";
 import { colors } from "@/theme";
+import { Celebrate, NextSteps } from "@/components/Celebrate";
 import type { PaySummary } from "@/lib/types";
 
 const waiting = (r: PaySummary) => r.paymentStatus === "processing" || (r.provider === "paystack" && r.paymentStatus === "pending");
@@ -52,16 +53,18 @@ export default function Success() {
 
   const done = (
     <View style={{ gap: 8 }}>
-      <Button title="Continue shopping" kind="ink" onPress={() => router.dismissTo("/(tabs)/shop")} />
-      <Button title="My orders" kind="ghost" onPress={() => router.dismissTo("/(tabs)/orders")} />
+      <Button title="Track my order" onPress={() => router.dismissTo("/(tabs)/orders")} />
+      <Button title="Back home" kind="ghost" onPress={() => router.dismissTo("/(tabs)")} />
     </View>
   );
 
   if (orderRef)
     return (
       <Screen>
-        <H1>Thank you. We've got your order.</H1>
-        <P>Order <P style={{ color: colors.ink }}>{orderRef}</P> was paid with your gift card and is pending. We'll call shortly to arrange delivery.</P>
+        <Celebrate />
+        <H1 style={{ textAlign: "center" }}>You're going solar!</H1>
+        <P style={{ textAlign: "center" }}>Order {orderRef} was paid with your gift card.</P>
+        <NextSteps />
         <Button title="Share: I'm going solar" kind="ghost" onPress={() => sharePicture("order", orderRef, "I'm going solar!", `${SITE}/`)} />
         {done}
       </Screen>
@@ -93,6 +96,7 @@ export default function Success() {
     const p = r.pool;
     return (
       <Screen>
+        {r.accepted ? <Celebrate icon="heart" tone="lemon" /> : null}
         <H1>{r.accepted ? "Thank you for chipping in!" : "The kit was already funded"}</H1>
         {r.accepted ? (
           <P>You added {naira(r.accepted)} to {p.title}. It's now at {naira(p.raised)} of {naira(p.goal)}{p.status === "funded" ? ". Goal reached, so we're placing the order!" : "."}</P>
@@ -107,7 +111,8 @@ export default function Success() {
   if (r.kind === "gift_card")
     return (
       <Screen>
-        <H1>Your gift card is ready</H1>
+        <Celebrate icon="gift" tone="lemon" />
+        <H1 style={{ textAlign: "center" }}>Your gift card is ready</H1>
         {r.gift ? (
           <>
             <P>A {naira(r.gift.amount)} solar gift card{r.gift.toName ? ` for ${r.gift.toName}` : ""}. It never expires.</P>
@@ -126,11 +131,13 @@ export default function Success() {
   const o = r.order;
   return (
     <Screen>
-      <H1>Thank you. We've got your order.</H1>
-      <P>
-        Order {o?.ref} for {naira(o?.total ?? r.amount ?? 0)}{o?.giftUsed ? ` (${naira(o.giftUsed)} on your gift card)` : ""} is pending.{" "}
-        {o?.phone ? `We'll call ${o.recipient ? o.recipient.name : "you"} on ${ngLocal(o.phone)} shortly to arrange delivery${o.installer ? " and installation" : ""}.` : "We'll call shortly to arrange delivery."}
+      <Celebrate />
+      <H1 style={{ textAlign: "center" }}>{o?.recipient ? `${o.recipient.name} is going solar!` : "You're going solar!"}</H1>
+      <P style={{ textAlign: "center" }}>
+        Order {o?.ref} · {naira(o?.total ?? r.amount ?? 0)}{o?.giftUsed ? ` (${naira(o.giftUsed)} on your gift card)` : ""}
+        {o?.phone ? `. We'll call ${o.recipient ? o.recipient.name : "you"} on ${ngLocal(o.phone)}.` : ""}
       </P>
+      <NextSteps installer={o?.installer} who={o?.recipient?.name} />
       {r.emailed && o?.email ? <Small>A copy has been sent to {o.email}.</Small> : null}
       {o?.ref ? <Button title="Share: I'm going solar" kind="ghost" onPress={() => sharePicture("order", o.ref, "I'm going solar!", `${SITE}/`)} /> : null}
       {done}

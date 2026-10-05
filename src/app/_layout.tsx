@@ -7,10 +7,9 @@ import * as SplashScreen from "expo-splash-screen";
 import * as Notifications from "expo-notifications";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { BricolageGrotesque_600SemiBold, BricolageGrotesque_800ExtraBold } from "@expo-google-fonts/bricolage-grotesque";
 import {
-  InstrumentSans_400Regular, InstrumentSans_500Medium, InstrumentSans_600SemiBold, InstrumentSans_700Bold,
-} from "@expo-google-fonts/instrument-sans";
+  Manrope_300Light, Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold,
+} from "@expo-google-fonts/manrope";
 import { queryClient } from "@/lib/query";
 import { useAuth } from "@/stores/auth";
 import { useProfile } from "@/stores/profile";
@@ -21,8 +20,7 @@ void SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    BricolageGrotesque_600SemiBold, BricolageGrotesque_800ExtraBold,
-    InstrumentSans_400Regular, InstrumentSans_500Medium, InstrumentSans_600SemiBold, InstrumentSans_700Bold,
+    Manrope_300Light, Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold,
   });
   const authReady = useAuth((s) => s.ready);
   const hydrated = useProfile((s) => s.hydrated);
@@ -55,7 +53,7 @@ export default function RootLayout() {
         <Stack
           screenOptions={{
             headerTintColor: colors.ink,
-            headerTitleStyle: { fontFamily: fonts.display },
+            headerTitleStyle: { fontFamily: fonts.sansBold, fontSize: 17 },
             headerStyle: { backgroundColor: colors.haze },
             headerShadowVisible: false,
             headerBackButtonDisplayMode: "minimal",
@@ -67,6 +65,23 @@ export default function RootLayout() {
           <Stack.Screen name="pay" options={{ presentation: "fullScreenModal", headerShown: false, gestureEnabled: false }} />
           <Stack.Screen name="success" options={{ headerShown: false, gestureEnabled: false }} />
           <Stack.Screen name="sign-in" options={{ presentation: "modal", title: "Sign in" }} />
+          <Stack.Screen name="find" options={{ headerShown: false }} />
+          <Stack.Screen name="checkout/index" options={{ title: "Checkout" }} />
+          <Stack.Screen name="checkout/success" options={{ headerShown: false }} />
+          <Stack.Screen name="fund/new" options={{ title: "Start a page" }} />
+          <Stack.Screen name="fund/[id]" options={{ title: "Go Solar Me" }} />
+          <Stack.Screen name="kit" options={{ title: "" }} />
+          <Stack.Screen name="cart" options={{ title: "Your list" }} />
+          <Stack.Screen name="product/[slug]" options={{ title: "" }} />
+          <Stack.Screen name="packages/[slug]" options={{ title: "" }} />
+          <Stack.Screen name="b/[id]" options={{ title: "Shared list" }} />
+          <Stack.Screen name="s/[slug]" options={{ title: "" }} />
+          <Stack.Screen name="gift-cards" options={{ title: "Gift cards" }} />
+          <Stack.Screen name="pay-small-small" options={{ title: "Pay small small" }} />
+          <Stack.Screen name="reset" options={{ title: "Reset password" }} />
+          <Stack.Screen name="account/profile" options={{ title: "Profile" }} />
+          <Stack.Screen name="account/cards" options={{ title: "Saved cards" }} />
+          <Stack.Screen name="account/store" options={{ title: "My store" }} />
         </Stack>
       </QueryClientProvider>
     </SafeAreaProvider>

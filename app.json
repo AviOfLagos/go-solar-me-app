@@ -23,7 +23,7 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png",
-        "backgroundColor": "#10213B"
+        "backgroundColor": "#1D2621"
       },
       "package": "ng.solarbuilders.gosolarme",
       "intentFilters": [
@@ -88,7 +88,7 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 160,
           "resizeMode": "contain",
-          "backgroundColor": "#10213B"
+          "backgroundColor": "#F3F2EC"
         }
       ]
     ],
