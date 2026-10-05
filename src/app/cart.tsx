@@ -8,6 +8,7 @@ import { encodeItems, priceLines } from "@/lib/kit";
 import { useCart, type Line } from "@/stores/cart";
 import { CART } from "@/shared/store";
 import { colors } from "@/theme";
+import { ShareList } from "@/components/ShareList";
 
 export default function CartScreen() {
   const { resume } = useLocalSearchParams<{ resume?: string }>();
@@ -63,6 +64,7 @@ export default function CartScreen() {
           </Row>
         </Card>
       ))}
+      <ShareList items={items} />
     </Screen>
   );
 }

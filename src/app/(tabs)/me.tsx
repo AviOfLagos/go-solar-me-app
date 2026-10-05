@@ -7,6 +7,8 @@ import { unregisterPush } from "@/lib/push";
 import { signOutGoogle } from "@/lib/signin";
 import { waLink } from "@/lib/config";
 import { useAuth } from "@/stores/auth";
+import { useProfile } from "@/stores/profile";
+import { roleTitle } from "@/lib/roles";
 import { colors, fonts } from "@/theme";
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -28,6 +30,7 @@ export default function MeTab() {
   const user = useAuth((s) => s.user);
   const me = useMe();
   const store = me.data?.store;
+  const role = useProfile((s) => s.role);
 
   const signOut = async () => {
     await unregisterPush();
@@ -45,6 +48,7 @@ export default function MeTab() {
         </Card>
       )}
       <Card style={{ gap: 0 }}>
+        <Item icon="compass-outline" title="I'm here to…" sub={roleTitle(role)} onPress={() => router.push({ pathname: "/welcome", params: { step: "role" } })} />
         {user ? <Item icon="person-outline" title="Profile" sub="Name and phone" onPress={() => router.push("/account/profile")} /> : null}
         {user ? <Item icon="card-outline" title="Saved cards" sub="Name, remove or add cards" onPress={() => router.push("/account/cards")} /> : null}
         <Item icon="ticket-outline" title="Gift cards" sub="Buy one or check a balance" onPress={() => router.push("/gift-cards")} />

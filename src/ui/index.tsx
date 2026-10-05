@@ -1,4 +1,4 @@
-import { forwardRef, type ReactNode } from "react";
+import { forwardRef, isValidElement, type ReactNode } from "react";
 import {
   ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
   type PressableProps, type ScrollViewProps, type StyleProp, type TextInputProps, type TextProps, type TextStyle, type ViewStyle,
@@ -144,7 +144,7 @@ export const ErrorBox = ({ message, onRetry }: { message: string; onRetry?: () =
 );
 export const Notice = ({ children, tone = "sun" }: { children: ReactNode; tone?: "sun" | "leaf" }) => (
   <View style={[s.notice, { backgroundColor: tone === "leaf" ? colors.leafTint : colors.sunTint }]}>
-    {typeof children === "string" ? <P>{children}</P> : children}
+    {isValidElement(children) ? children : <P>{children}</P>}
   </View>
 );
 export const Empty = ({ title, text, action }: { title: string; text?: string; action?: ReactNode }) => (

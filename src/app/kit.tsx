@@ -5,6 +5,10 @@ import { Card, ErrorBox, H2, Loading, Money, P, ProductImage, Row, Screen, Small
 import { useCatalog } from "@/lib/catalog";
 import { asString, decodeItems, encodeItems, priceLines } from "@/lib/kit";
 import { useCart } from "@/stores/cart";
+import { useProfile } from "@/stores/profile";
+import { PATH_ORDER, type PayPath } from "@/lib/roles";
+import { ShareList } from "@/components/ShareList";
+import { useState } from "react";
 import { FINANCE } from "@/shared/store";
 import { colors, fonts } from "@/theme";
 
@@ -16,6 +20,8 @@ export default function KitScreen() {
   const items = decodeItems(q.items);
   const cat = useCatalog();
   const addMany = useCart((s) => s.addMany);
+  const role = useProfile((s) => s.role) ?? "home";
+  const [sharing, setSharing] = useState(false);
 
   if (cat.isPending) return <Screen edges={[]}><Loading /></Screen>;
   if (cat.error) return <Screen edges={[]}><ErrorBox message={cat.error.message} onRetry={() => cat.refetch()} /></Screen>;
@@ -23,17 +29,22 @@ export default function KitScreen() {
   if (!lines.length) return <Screen edges={[]}><ErrorBox message="This kit isn't available any more. Pick another." /></Screen>;
   const enc = encodeItems(items);
 
-  const paths: { icon: IconName; title: string; sub: string; go: () => void; hide?: boolean }[] = [
-    { icon: "card-outline", title: "Pay now", sub: "Card, bank transfer or USSD. Delivered to you.", go: () => { addMany(items); router.push("/checkout"); } },
-    { icon: "gift-outline", title: "Buy for someone", sub: "Send it to family or a friend in Lagos. Pay from anywhere.", go: () => { addMany(items); router.push({ pathname: "/checkout", params: { for: "someone" } }); } },
-    { icon: "people-outline", title: "Go Solar Me", sub: "A page anyone can chip in to. The order places itself at 100%.", go: () => router.push({ pathname: "/fund/new", params: { items: enc } }) },
-    { icon: "git-branch-outline", title: "Split with squad", sub: "2 to 10 people, equal shares, one pay button each.", go: () => router.push({ pathname: "/fund/new", params: { items: enc, kind: "squad" } }) },
-    { icon: "ticket-outline", title: "Give a gift card", sub: "They spend it on this kit or anything else.", go: () => router.push({ pathname: "/gift-cards", params: { amount: String(subtotal) } }) },
-    { icon: "calendar-outline", title: "Pay small small", sub: `30–50% down, the rest over 3 to 12 months.`, go: () => router.push({ pathname: "/pay-small-small", params: { items: enc } }), hide: subtotal < FINANCE.minTotal },
-  ];
-  // Someone else first if that's who it's for.
-  if (q.who === "someone") paths.unshift(paths.splice(1, 1)[0]);
-  if (q.who === "us") paths.unshift(paths.splice(3, 1)[0]);
+  const all: Record<PayPath, { icon: IconName; title: string; sub: string; go: () => void; hide?: boolean }> = {
+    share: { icon: "share-social-outline", title: "Share this list", sub: "Send a link. They see today's prices and pay.", go: () => setSharing(true) },
+    now: { icon: "card-outline", title: "Pay now", sub: "Card, bank transfer or USSD. Delivered to you.", go: () => { addMany(items); router.push("/checkout"); } },
+    someone: { icon: "gift-outline", title: "Buy for someone", sub: "Send it to family or a friend in Lagos. Pay from anywhere.", go: () => { addMany(items); router.push({ pathname: "/checkout", params: { for: "someone" } }); } },
+    fund: { icon: "people-outline", title: "Go Solar Me", sub: "A page anyone can chip in to. The order places itself at 100%.", go: () => router.push({ pathname: "/fund/new", params: { items: enc } }) },
+    squad: { icon: "git-branch-outline", title: "Split with squad", sub: "2 to 10 people, equal shares, one pay button each.", go: () => router.push({ pathname: "/fund/new", params: { items: enc, kind: "squad" } }) },
+    gift: { icon: "ticket-outline", title: "Give a gift card", sub: "They spend it on this kit or anything else.", go: () => router.push({ pathname: "/gift-cards", params: { amount: String(subtotal) } }) },
+    small: { icon: "calendar-outline", title: "Pay small small", sub: `30–50% down, the rest over 3 to 12 months.`, go: () => router.push({ pathname: "/pay-small-small", params: { items: enc } }), hide: subtotal < FINANCE.minTotal },
+  };
+  // The order follows what the person told us at the start; "someone else" or "us" on the calculator wins.
+  const order = [...PATH_ORDER[role]];
+  const bump = (k: PayPath) => { order.splice(order.indexOf(k), 1); order.unshift(k); };
+  if (q.who === "us") bump("squad");
+  if (q.who === "someone") bump("someone");
+  const paths = order.map((k) => all[k]).filter((p) => !p.hide);
+  const [first, ...rest] = paths;
 
   return (
     <Screen edges={[]}>
@@ -52,16 +63,17 @@ export default function KitScreen() {
         </Row>
         <Small>Free delivery in Lagos.</Small>
       </Card>
+      {sharing ? <Card><ShareList items={items} kind="ink" /></Card> : null}
       <H2>How do you want to pay?</H2>
-      {paths.filter((p) => !p.hide).map((p) => (
+      {[first, ...rest].map((p, i) => (
         <Pressable key={p.title} onPress={p.go} accessibilityRole="button"
-          style={({ pressed }) => ({ flexDirection: "row", gap: 12, alignItems: "center", padding: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.line, backgroundColor: pressed ? colors.sunTint : colors.paper })}>
+          style={({ pressed }) => ({ flexDirection: "row", gap: 12, alignItems: "center", padding: 14, borderRadius: 14, borderWidth: 1, backgroundColor: pressed ? colors.sunTint : i === 0 ? colors.sunTint : colors.paper, borderColor: i === 0 ? colors.ink : colors.line })}>
           <Ionicons name={p.icon} size={24} color={colors.ink} />
           <View style={{ flex: 1 }}>
             <P style={{ fontFamily: fonts.sansSemiBold, color: colors.ink }}>{p.title}</P>
             <Small>{p.sub}</Small>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.mute} />
+          {i === 0 ? <Small style={{ fontFamily: fonts.sansBold, color: colors.ink }}>Suggested</Small> : <Ionicons name="chevron-forward" size={18} color={colors.mute} />}
         </Pressable>
       ))}
     </Screen>

@@ -17,7 +17,7 @@ let lastToken: string | null = null;
  */
 export async function registerForPush() {
   try {
-    if (!Device.isDevice) return null;
+    if (Platform.OS === "web" || !Device.isDevice) return null;
     if (Platform.OS === "android") {
       await Notifications.setNotificationChannelAsync("default", { name: "Orders and pools", importance: Notifications.AndroidImportance.DEFAULT });
     }

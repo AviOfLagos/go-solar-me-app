@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -12,6 +13,7 @@ import {
 } from "@expo-google-fonts/instrument-sans";
 import { queryClient } from "@/lib/query";
 import { useAuth } from "@/stores/auth";
+import { useProfile } from "@/stores/profile";
 import { openFromPush, registerForPush } from "@/lib/push";
 import { colors, fonts } from "@/theme";
 
@@ -22,7 +24,9 @@ export default function RootLayout() {
     BricolageGrotesque_600SemiBold, BricolageGrotesque_800ExtraBold,
     InstrumentSans_400Regular, InstrumentSans_500Medium, InstrumentSans_600SemiBold, InstrumentSans_700Bold,
   });
-  const ready = useAuth((s) => s.ready);
+  const authReady = useAuth((s) => s.ready);
+  const hydrated = useProfile((s) => s.hydrated);
+  const ready = authReady && hydrated;
   const user = useAuth((s) => s.user);
 
   useEffect(() => { void useAuth.getState().boot(); }, []);
@@ -35,6 +39,7 @@ export default function RootLayout() {
 
   // Open the right screen when a push is tapped (also when it launched the app).
   useEffect(() => {
+    if (Platform.OS === "web") return;
     const last = Notifications.getLastNotificationResponse();
     if (last) openFromPush(last.notification.request.content.data);
     const sub = Notifications.addNotificationResponseReceivedListener((r) => openFromPush(r.notification.request.content.data));
@@ -58,6 +63,7 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="welcome" options={{ headerShown: false, animation: "fade" }} />
           <Stack.Screen name="pay" options={{ presentation: "fullScreenModal", headerShown: false, gestureEnabled: false }} />
           <Stack.Screen name="success" options={{ headerShown: false, gestureEnabled: false }} />
           <Stack.Screen name="sign-in" options={{ presentation: "modal", title: "Sign in" }} />

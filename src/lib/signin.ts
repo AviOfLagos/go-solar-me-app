@@ -34,6 +34,10 @@ export async function signInWithGoogle() {
   } catch (e) {
     if (isErrorWithCode(e) && (e.code === statusCodes.SIGN_IN_CANCELLED || e.code === statusCodes.IN_PROGRESS)) return null;
     if (e instanceof ApiError) throw e;
+    const code = String((e as { code?: string | number })?.code ?? "");
+    if (code === "WEB_PREVIEW") throw new ApiError("Google sign-in works in the phone app. Use email in this preview.", 0);
+    // Google rejects builds whose signing key it doesn't know yet (Android "DEVELOPER_ERROR", code 10).
+    if (code === "10" || /DEVELOPER_ERROR/i.test(code)) throw new ApiError("Google sign-in isn't switched on for this test build yet. Use email for now.", 0);
     throw new ApiError("Google sign-in didn't go through. Try again, or use email.", 0);
   }
 }

@@ -15,6 +15,12 @@ npx expo start --dev-client
 
 Expo Go can't run this app: it uses native modules (Stripe, Google sign-in, Apple sign-in).
 
+## Preview while building
+
+**In a browser (lightest, no emulator):** `npm run web` opens the app at http://localhost:8081 and reloads on every save. Use Chrome's phone view (Cmd+Option+I, then the phone icon). Card payments, Google/Apple sign-in and Paystack's in-app page are phone-only, so the browser shows a note there; everything else is real.
+
+**On your Android phone (exact look, live reload):** install the `development` build once (`npx eas-cli@latest build --profile development --platform android`), then `npx expo start` and scan the QR code. Edits show on the phone in a second.
+
 ## Checks (all pass)
 
 ```bash
