@@ -2,18 +2,14 @@ import { useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { Small } from "@/ui";
 import { APPLE_READY } from "@/lib/config";
 import { colors, fonts, radii } from "@/theme";
 
-/** Google's four-colour "G", drawn with text so no image or SVG library is needed. */
+/** Google's official four-colour "G" mark (used as Google's sign-in branding guidelines allow). */
 function GoogleG() {
-  const letters: [string, string][] = [["G", "#4285F4"]];
-  return (
-    <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: colors.paper, alignItems: "center", justifyContent: "center" }}>
-      {letters.map(([l, c]) => <Text key={l} style={{ fontFamily: fonts.sansBold, fontSize: 18, color: c, lineHeight: 22 }}>{l}</Text>)}
-    </View>
-  );
+  return <Image source={require("../../assets/google-g.png")} style={{ width: 20, height: 20 }} accessibilityIgnoresInvertColors />;
 }
 
 function Social({ icon, title, onPress, busy, dark, disabled, badge }: {
