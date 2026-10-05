@@ -26,18 +26,5 @@
         "EXPO_PUBLIC_API_BASE": "https://solar.nexprove.com/api/v1"
       }
     }
-  },
-  "submit": {
-    "production": {
-      "ios": {
-        "appleId": "",
-        "ascAppId": "",
-        "appleTeamId": ""
-      },
-      "android": {
-        "serviceAccountKeyPath": "./google-play-key.json",
-        "track": "internal"
-      }
-    }
   }
 }
