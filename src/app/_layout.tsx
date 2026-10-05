@@ -1,5 +1,5 @@
-import { Platform } from "react-native";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { Platform, View } from "react-native";
 import { Stack } from "expo-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
@@ -15,6 +15,7 @@ import { useAuth } from "@/stores/auth";
 import { useProfile } from "@/stores/profile";
 import { openFromPush, registerForPush } from "@/lib/push";
 import { colors, fonts } from "@/theme";
+import { AppSplash } from "@/components/AppSplash";
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -44,10 +45,13 @@ export default function RootLayout() {
     return () => sub.remove();
   }, []);
 
+  const [splash, setSplash] = useState(true);
+  const hideSplash = useCallback(() => setSplash(false), []);
   if ((!fontsLoaded && !fontError) || !ready) return null;
 
   return (
     <SafeAreaProvider>
+      <View style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <StatusBar style="dark" />
         <Stack
@@ -84,6 +88,8 @@ export default function RootLayout() {
           <Stack.Screen name="account/store" options={{ title: "My store" }} />
         </Stack>
       </QueryClientProvider>
+      {splash ? <AppSplash onDone={hideSplash} /> : null}
+      </View>
     </SafeAreaProvider>
   );
 }

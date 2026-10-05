@@ -189,7 +189,7 @@ export function OptionCard({ icon, title, sub, on, onPress, right }: {
 
 /** A small rounded label, e.g. "Suggested" or "Saves ₦96,000/mo". */
 export const Tag = ({ label, tone = "mint" }: { label: string; tone?: "mint" | "lemon" | "ink" | "line" }) => (
-  <View style={{ alignSelf: "flex-start", borderRadius: radii.pill, paddingHorizontal: 10, paddingVertical: 4,
+  <View style={{ alignSelf: "flex-start", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5,
     backgroundColor: tone === "mint" ? colors.mint : tone === "lemon" ? colors.lemon : tone === "ink" ? colors.ink : colors.paper }}>
     <Text style={{ fontFamily: fonts.sansBold, fontSize: 12, color: tone === "ink" ? colors.paper : colors.ink }}>{label}</Text>
   </View>
@@ -259,11 +259,11 @@ export const s = StyleSheet.create({
   money: { fontFamily: fonts.sansBold, fontSize: 16, color: colors.ink, fontVariant: ["tabular-nums"] },
   card: { backgroundColor: colors.paper, borderRadius: radii.card, padding: 18, gap: space.sm },
   row: { flexDirection: "row", alignItems: "center", gap: space.sm },
-  btn: { minHeight: 54, borderRadius: radii.pill, alignItems: "center", justifyContent: "center", paddingHorizontal: 22 },
+  btn: { minHeight: 54, borderRadius: radii.button, alignItems: "center", justifyContent: "center", paddingHorizontal: 22 },
   btnSmall: { minHeight: MIN_TOUCH, paddingHorizontal: 18 },
   btnText: { fontFamily: fonts.sansBold, fontSize: 16, letterSpacing: 0.1 },
   input: { minHeight: 52, borderWidth: 1, borderColor: colors.line, borderRadius: radii.input, backgroundColor: colors.paper, paddingHorizontal: 16, fontFamily: fonts.sansMedium, fontSize: 16, color: colors.ink },
-  chip: { minHeight: MIN_TOUCH, paddingHorizontal: 16, paddingVertical: 10, borderRadius: radii.pill, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.paper, justifyContent: "center" },
+  chip: { minHeight: MIN_TOUCH, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.paper, justifyContent: "center" },
   chipText: { fontFamily: fonts.sansMedium, fontSize: 14, color: colors.ink },
   choice: { flex: 1, minHeight: 64, borderWidth: 1.5, borderColor: colors.line, borderRadius: 18, padding: 14, backgroundColor: colors.paper, gap: 2 },
   choiceTitle: { fontFamily: fonts.sansSemiBold, fontSize: 15, color: colors.ink },

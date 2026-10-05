@@ -25,7 +25,7 @@ function Social({ icon, title, onPress, busy, dark, disabled, badge }: {
       accessibilityState={{ disabled: !!disabled, busy: !!busy }}
       onPress={onPress}
       style={({ pressed }) => ({
-        minHeight: 54, borderRadius: radii.pill, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10,
+        minHeight: 54, borderRadius: radii.button, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10,
         backgroundColor: dark ? "#000" : colors.paper, borderWidth: 0,
         opacity: disabled ? 0.45 : busy || pressed ? 0.75 : 1, paddingHorizontal: 16,
       })}
@@ -54,7 +54,7 @@ export function AuthButtons({ busy, onGoogle, onApple, appleAvailable }: {
         <AppleAuthentication.AppleAuthenticationButton
           buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
           buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-          cornerRadius={27}
+          cornerRadius={16}
           style={{ height: 54 }}
           onPress={onApple}
         />

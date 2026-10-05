@@ -5,7 +5,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, ErrorBox, H1, OptionCard, P, Small, StepBar } from "@/ui";
 import { AuthButtons } from "@/components/AuthButtons";
 import { OpenLink } from "@/components/OpenLink";
-import { Scene } from "@/components/Scene";
+import { Photo, PhotoChip } from "@/components/Photo";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import { ROLES, type Role } from "@/lib/roles";
 import { appleAvailable, signInWithApple, signInWithGoogle } from "@/lib/signin";
 import { errorMessage } from "@/lib/api";
@@ -53,15 +55,22 @@ export default function Welcome() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.haze }} edges={["top", "bottom"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.haze }} edges={step === "intro" ? ["bottom"] : ["top", "bottom"]}>
       <Stack.Screen options={{ headerShown: false, gestureEnabled: changing }} />
       <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 20, gap: 20 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {step === "intro" ? (
           <>
-            <Scene kind="home" height={340} />
-            <View style={{ gap: 10 }}>
-              <H1 style={{ fontSize: 36, lineHeight: 42 }}>Steady light,{"\n"}without the fuel.</H1>
-              <P>Solar kits for Lagos homes and businesses. Pick a kit in a minute, pay your way, and we install it.</P>
+            <Photo kind="hero" height={500} radius={0} style={{ marginHorizontal: -20, marginTop: -20 }}>
+              <LinearGradient colors={["rgba(243,242,236,0)", "rgba(243,242,236,0)", colors.haze]} locations={[0, 0.55, 0.97]} style={{ position: "absolute", inset: 0 }} />
+              <PhotoChip label="Sun power" sub="₦0 on fuel today" style={{ right: 20, top: 190 }} />
+            </Photo>
+            <View style={{ gap: 10, marginTop: -60 }}>
+              <Text style={{ fontFamily: fonts.light, fontSize: 40, lineHeight: 46, color: colors.ink, letterSpacing: -1 }}>
+                Steady{" "}
+                <Text style={{ backgroundColor: colors.mint, fontFamily: fonts.sansSemiBold }}> light </Text>
+                {"\n"}without the fuel.
+              </Text>
+              <P>Solar kits for Lagos homes and businesses. Pick one in a minute, pay your way, and we install it.</P>
             </View>
             <View style={{ flex: 1 }} />
             {haveLink ? (
@@ -69,14 +78,16 @@ export default function Welcome() {
                 <OpenLink label="Paste the link or code you got" onOpened={() => finish()} />
               </View>
             ) : null}
-            <Button title="Get started" icon="arrow-forward" onPress={() => setStep("role")} />
-            {!haveLink ? (
-              <Pressable onPress={() => setHaveLink(true)} hitSlop={8} accessibilityRole="button">
-                <Text style={{ color: colors.ink2, fontFamily: fonts.sansSemiBold, textAlign: "center" }}>
-                  Got a link from an installer? <Text style={{ color: colors.ink, textDecorationLine: "underline" }}>Open it</Text>
-                </Text>
-              </Pressable>
-            ) : null}
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <Button title="Get started" icon="arrow-forward" onPress={() => setStep("role")} style={{ flex: 1 }} />
+              {!haveLink ? (
+                <Pressable onPress={() => setHaveLink(true)} accessibilityRole="button" accessibilityLabel="I have a link or code from an installer"
+                  style={({ pressed }) => ({ width: 54, height: 54, borderRadius: 16, backgroundColor: colors.paper, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.7 : 1 })}>
+                  <Ionicons name="link" size={22} color={colors.ink} />
+                </Pressable>
+              ) : null}
+            </View>
+            {!haveLink ? <Small style={{ textAlign: "center" }}>Got a link from an installer? Tap the link button.</Small> : null}
           </>
         ) : step === "role" ? (
           <>
@@ -94,7 +105,7 @@ export default function Welcome() {
         ) : (
           <>
             <StepBar step={2} total={2} onBack={() => setStep("role")} label="Almost done" />
-            <Scene kind={pick ?? "home"} height={180} />
+            <Photo kind={pick ?? "home"} height={170} />
             <View style={{ gap: 8 }}>
               <H1>Save your progress?</H1>
               <P>{ACCOUNT_COPY[pick ?? "home"]}</P>

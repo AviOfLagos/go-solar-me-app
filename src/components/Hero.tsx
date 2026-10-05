@@ -3,11 +3,21 @@ import { Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Button, H1, Money, P, Small } from "@/ui";
-import { Scene, type SceneKind } from "@/components/Scene";
+import { Photo, PhotoChip } from "@/components/Photo";
+
 import { OpenLink } from "@/components/OpenLink";
 import { useAuth } from "@/stores/auth";
 import type { Order } from "@/lib/types";
 import { colors, fonts } from "@/theme";
+
+type SceneKind = "home" | "gift" | "group" | "pro";
+const CHIPS: Record<SceneKind, { icon: keyof typeof Ionicons.glyphMap; label: string; sub: string }> = {
+  home: { icon: "sunny", label: "Sun power", sub: "No fuel today" },
+  gift: { icon: "gift", label: "Delivered to Mum", sub: "Lights on since 4pm" },
+  group: { icon: "people", label: "78% funded", sub: "12 people chipped in" },
+  pro: { icon: "paper-plane", label: "Quote sent", sub: "Client opened it" },
+};
+
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -39,8 +49,10 @@ export function StartCard({ scene, title, sub, meta, cta, onPress, children }: {
   scene: SceneKind; title: string; sub: string; meta?: string; cta: string; onPress: () => void; children?: ReactNode;
 }) {
   return (
-    <View style={{ backgroundColor: colors.paper, borderRadius: 30, padding: 10, gap: 4 }}>
-      <Scene kind={scene} height={190} />
+    <View style={{ backgroundColor: colors.paper, borderRadius: 28, padding: 8, gap: 4 }}>
+      <Photo kind={scene} height={210} radius={22}>
+        <PhotoChip {...CHIPS[scene]} style={{ left: 12, bottom: 12 }} />
+      </Photo>
       <View style={{ padding: 12, gap: 8 }}>
         {meta ? (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>

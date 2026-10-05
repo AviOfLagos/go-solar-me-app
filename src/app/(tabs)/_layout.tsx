@@ -24,7 +24,7 @@ function FloatingBar({ state, descriptors, navigation, visible, badge }: BarProp
   return (
     <View pointerEvents="box-none" style={{ position: "absolute", left: 0, right: 0, bottom: Math.max(insets.bottom, 12), alignItems: "center" }}>
       <View style={{
-        flexDirection: "row", gap: 4, padding: 6, borderRadius: 999, backgroundColor: colors.paper,
+        flexDirection: "row", gap: 4, padding: 6, borderRadius: 24, backgroundColor: colors.paper,
         shadowColor: "#17201B", shadowOpacity: 0.12, shadowRadius: 18, shadowOffset: { width: 0, height: 6 }, elevation: 10,
       }}>
         {state.routes.filter((r) => visible.includes(r.name)).map((route) => {
@@ -37,7 +37,7 @@ function FloatingBar({ state, descriptors, navigation, visible, badge }: BarProp
           };
           return (
             <Pressable key={route.key} onPress={press} accessibilityRole="tab" accessibilityState={{ selected: focused }} accessibilityLabel={title}
-              style={{ flexDirection: "row", alignItems: "center", gap: 8, height: 52, paddingHorizontal: focused ? 18 : 15, borderRadius: 999, backgroundColor: focused ? colors.ink : "transparent" }}>
+              style={{ flexDirection: "row", alignItems: "center", gap: 8, height: 52, paddingHorizontal: focused ? 18 : 15, borderRadius: 18, backgroundColor: focused ? colors.ink : "transparent" }}>
               <View>
                 <Ionicons name={focused ? on : off} size={22} color={focused ? colors.mint : colors.ink2} />
                 {route.name === "shop" && badge > 0 ? (

@@ -43,7 +43,7 @@ export default function Shop() {
           <View style={{ gap: 12, marginBottom: 6 }}>
             <H1>{pro ? "Catalogue" : "Shop"}</H1>
             {pro ? <Small>Tap + to add items to your list, then share it from the cart.</Small> : null}
-            <Row style={{ backgroundColor: colors.paper, borderRadius: 999, paddingHorizontal: 16, minHeight: 50 }}>
+            <Row style={{ backgroundColor: colors.paper, borderRadius: 16, paddingHorizontal: 16, minHeight: 50 }}>
               <Ionicons name="search" size={18} color={colors.mute} />
               <TextInput placeholder="Search 5kVA, lithium, EcoFlow…" placeholderTextColor={colors.mute} value={q} onChangeText={setQ} returnKeyType="search" autoCorrect={false}
                 accessibilityLabel="Search" style={{ flex: 1, fontFamily: fonts.sansMedium, fontSize: 15, color: colors.ink, paddingVertical: 12 }} />

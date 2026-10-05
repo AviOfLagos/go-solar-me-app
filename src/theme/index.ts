@@ -34,7 +34,7 @@ export const fonts = {
   sansBold: "Manrope_700Bold",
 } as const;
 
-export const radii = { input: 16, card: 24, pill: 999 } as const;
+export const radii = { input: 14, button: 16, card: 24, pill: 999 } as const;
 export const space = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 } as const;
 /** Minimum touch target (Apple HIG / WCAG). */
 export const MIN_TOUCH = 44;

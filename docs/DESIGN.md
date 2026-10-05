@@ -17,10 +17,11 @@ The app should feel calm and easy: one clear thing to do on every screen, short 
 | `night` | `#1D2621` | Dark hero cards |
 
 - **Type:** Manrope. Big headings are light (300), not bold. Body 15–16px. Labels semibold.
-- **Shapes:** cards 24px corners, buttons are full pills, chips are pills.
+- **Shapes:** cards 24px corners; buttons, inputs and chips are soft rectangles (16 / 14 / 12px); tags 8px.
 - **Buttons:** primary is ink with white text. Secondary is white with a hairline border. Only one primary per screen.
-- **Tab bar:** a floating pill, four tabs at most.
-- **Imagery:** real homes with panels in warm light. Photos lead onboarding and home.
+- **Tab bar:** a floating bar (24px corners), four tabs at most.
+- **Imagery:** real photos of homes with panels (`assets/photos`, credits in `CREDITS.md`), with small frosted chips on top ("Sun power · ₦0 on fuel today"). Replace them with your own Lagos installs when you have them.
+- **Launch:** the native splash shows the icon on cream, then a 1.5 s photo splash (`AppSplash`) fades into the app.
 - **Motion:** gentle (150–250 ms), confirm progress, never decorate.
 
 ## Rules (and where they come from)
