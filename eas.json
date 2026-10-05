@@ -15,6 +15,9 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_API_BASE": "https://solar.nexprove.com/api/v1"
+      },
+      "android": {
+        "buildType": "apk"
       }
     },
     "production": {
