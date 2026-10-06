@@ -1,0 +1,32 @@
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A newer push makes the run in flight pointless, so don't pay for it.
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      # Both pass on a bare checkout: no .env, and no .expo/types from a dev run.
+      # Checked against a clean clone before this workflow was added.
+      - name: Typecheck
+        run: npm run typecheck
