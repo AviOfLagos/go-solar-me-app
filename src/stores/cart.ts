@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "@/lib/api";
+import { useAuth } from "@/stores/auth";
 import { CART } from "@/shared/store";
 import { NG_PHONE, INTL_PHONE, normalizePhone, isEmail } from "@/shared/format";
 
@@ -66,7 +67,7 @@ export function syncLead() {
     const phone = normalizePhone(contact.phone);
     const okPhone = NG_PHONE.test(phone) || INTL_PHONE.test(phone);
     const okEmail = isEmail(contact.email.trim());
-    if (!leadId && !okPhone && !okEmail) return;
+    if (!leadId && !okPhone && !okEmail && !useAuth.getState().user) return;
     try {
       const r = await api<{ id: string }>("/leads", {
         body: { id: leadId ?? undefined, name: contact.name, phone: okPhone ? phone : "", email: okEmail ? contact.email.trim() : "", consent: true, source: "app", items: lines },
@@ -77,3 +78,42 @@ export function syncLead() {
     }
   }, 800);
 }
+
+/** Highest quantity wins, so signing in twice never doubles a line. */
+function mergeLines(a: Line[], b: Line[]) {
+  const m = new Map<string, number>();
+  for (const l of [...a, ...b]) m.set(l.id, Math.max(m.get(l.id) ?? 0, l.qty));
+  return clampLines([...m].map(([id, qty]) => ({ id, qty })));
+}
+
+const sameLines = (a: Line[], b: Line[]) =>
+  a.length === b.length && a.every((l, i) => b[i]?.id === l.id && b[i]?.qty === l.qty);
+
+/**
+ * Brings back the cart saved against this account, so a kit picked on the web is still there
+ * on the phone. Merges rather than replaces: nothing already on this device is lost. If the two
+ * differed, the merged cart goes straight back up so both devices end up agreeing.
+ */
+export async function pullServerCart() {
+  try {
+    const r = await api<{ id: string | null; items: Line[] }>("/me/cart");
+    const local = useCart.getState().lines;
+    const merged = mergeLines(local, Array.isArray(r.items) ? r.items : []);
+    useCart.setState({ lines: merged, leadId: r.id ?? useCart.getState().leadId });
+    if (!sameLines(merged, r.items ?? [])) syncLead();
+  } catch {
+    // Offline, or the session has ended: the local cart stands on its own.
+  }
+}
+
+// Whenever a different person signs in -- on launch or freshly -- pick up their saved cart.
+// Signing out drops the lead id with the session: it belongs to that account, not to this phone.
+// The lines stay, because they are what the person in front of us was shopping for.
+let lastUid: string | null = null;
+useAuth.subscribe((s) => {
+  const uid = s.user?.id ?? null;
+  if (uid === lastUid) return;
+  lastUid = uid;
+  if (uid) void pullServerCart();
+  else useCart.setState({ leadId: null });
+});
