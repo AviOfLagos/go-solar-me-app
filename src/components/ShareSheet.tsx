@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, Share, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Modal, Pressable, ScrollView, Share, TextInput, View } from "react-native";
 import { Image } from "expo-image";
 import * as Clipboard from "expo-clipboard";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -49,7 +49,8 @@ export function ShareSheet({ p, visible, onClose, start }: { p: Pool; visible: b
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => onClose()}>
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.haze }}>
-        <ScrollView contentContainerStyle={{ padding: 20, gap: 14 }} keyboardShouldPersistTaps="handled">
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+        <ScrollView contentContainerStyle={{ padding: 20, gap: 14 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
           <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
             <H2>Share your page</H2>
             <Pressable onPress={() => onClose()} accessibilityRole="button" accessibilityLabel="Close" hitSlop={10}><Small style={{ fontFamily: fonts.sansBold }}>Close</Small></Pressable>
@@ -79,6 +80,7 @@ export function ShareSheet({ p, visible, onClose, start }: { p: Pool; visible: b
           <Button title="Share words only" kind="ghost" onPress={words} />
           <Small>Money goes to the kit, never to you. Your link is in the caption.</Small>
         </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </Modal>
   );

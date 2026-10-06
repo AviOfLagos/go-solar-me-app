@@ -1,6 +1,6 @@
-import { forwardRef, isValidElement, type ReactNode } from "react";
+import { forwardRef, isValidElement, useEffect, useRef, useState, type ReactNode } from "react";
 import {
-  ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, Dimensions, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
   type PressableProps, type ScrollViewProps, type StyleProp, type TextInputProps, type TextProps, type TextStyle, type ViewStyle,
 } from "react-native";
 import { SafeAreaView, type Edge } from "react-native-safe-area-context";
@@ -28,16 +28,36 @@ export function Screen({ children, scroll = true, edges = ["top"], contentStyle,
   /** A tab screen: leaves room for the floating tab bar. */
   tab?: boolean;
 }) {
+  const ref = useRef<ScrollView>(null);
+  const y = useRef(0);
+  // When the keyboard opens, lift the screen and scroll the field being typed in so it sits above the keyboard.
+  useEffect(() => {
+    if (!scroll) return;
+    const sub = Keyboard.addListener(Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow", (e) => {
+      const field = TextInput.State.currentlyFocusedInput?.();
+      if (!field) return;
+      setTimeout(() => field.measureInWindow((_x, top, _w, h) => {
+        const visibleBottom = Dimensions.get("window").height - e.endCoordinates.height - 24;
+        const over = top + h - visibleBottom;
+        if (over > 0) ref.current?.scrollTo({ y: y.current + over + 8, animated: true });
+      }), 120);
+    });
+    return () => sub.remove();
+  }, [scroll]);
   return (
     <SafeAreaView style={s.screen} edges={edges}>
-      {scroll ? (
-        <ScrollView contentContainerStyle={[s.content, tab && { paddingBottom: TAB_SPACE }, contentStyle]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" refreshControl={refreshControl}>
-          {children}
-        </ScrollView>
-      ) : (
-        <View style={[s.content, { flex: 1 }, contentStyle]}>{children}</View>
-      )}
-      {footer ? <View style={s.footer}>{footer}</View> : null}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+        {scroll ? (
+          <ScrollView ref={ref} onScroll={(e) => { y.current = e.nativeEvent.contentOffset.y; }} scrollEventThrottle={32}
+            contentContainerStyle={[s.content, tab && { paddingBottom: TAB_SPACE }, contentStyle]} showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"} refreshControl={refreshControl}>
+            {children}
+          </ScrollView>
+        ) : (
+          <View style={[s.content, { flex: 1 }, contentStyle]}>{children}</View>
+        )}
+        {footer ? <View style={s.footer}>{footer}</View> : null}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -81,17 +101,31 @@ export function Button({ title, kind = "ink", busy, disabled, style, small, icon
 }
 
 export const Field = forwardRef<TextInput, TextInputProps & { label: string; error?: string; hint?: string }>(
-  function Field({ label, error, hint, style, ...rest }, ref) {
+  function Field({ label, error, hint, style, secureTextEntry, ...rest }, ref) {
+    // Password fields get an eye so a typo can be checked.
+    const [hidden, setHidden] = useState(true);
+    const input = (
+      <TextInput
+        ref={ref}
+        placeholderTextColor={colors.mute}
+        style={[s.input, !!error && { borderColor: colors.flare }, secureTextEntry && { paddingRight: 52 }, style]}
+        accessibilityLabel={label}
+        secureTextEntry={secureTextEntry && hidden}
+        {...rest}
+      />
+    );
     return (
       <View style={{ gap: 6 }}>
         <Label>{label}</Label>
-        <TextInput
-          ref={ref}
-          placeholderTextColor={colors.mute}
-          style={[s.input, !!error && { borderColor: colors.flare }, style]}
-          accessibilityLabel={label}
-          {...rest}
-        />
+        {secureTextEntry ? (
+          <View>
+            {input}
+            <Pressable accessibilityRole="button" accessibilityLabel={hidden ? "Show password" : "Hide password"} hitSlop={8} onPress={() => setHidden((h) => !h)}
+              style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 52, alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name={hidden ? "eye-outline" : "eye-off-outline"} size={22} color={colors.mute} />
+            </Pressable>
+          </View>
+        ) : input}
         {error ? <Small style={{ color: colors.flare }}>{error}</Small> : hint ? <Small>{hint}</Small> : null}
       </View>
     );
