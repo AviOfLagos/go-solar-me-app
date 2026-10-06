@@ -2,6 +2,7 @@ import { Pressable, Text, View } from "react-native";
 import { Choice, Label, Row, Small } from "@/ui";
 import type { Card, PayOptions } from "@/lib/types";
 import { colors, fonts } from "@/theme";
+import { track } from "@/lib/track";
 
 export type Method = "paystack" | "stripe";
 
@@ -12,8 +13,8 @@ export function MethodPicker({ opts, value, onChange }: { opts: PayOptions | und
     <View style={{ gap: 6 }}>
       <Label>How do you want to pay?</Label>
       <Row>
-        <Choice title="Pay in naira" sub="Card, transfer or USSD" on={value === "paystack"} onPress={() => onChange("paystack")} />
-        <Choice title="Card from abroad" sub="Visa, Mastercard, Amex" on={value === "stripe"} onPress={() => onChange("stripe")} />
+        <Choice title="Pay in naira" sub="Card, transfer or USSD" on={value === "paystack"} onPress={() => { track("pay-naira"); onChange("paystack"); }} />
+        <Choice title="Card from abroad" sub="Visa, Mastercard, Amex" on={value === "stripe"} onPress={() => { track("pay-card-abroad"); onChange("stripe"); }} />
       </Row>
     </View>
   );

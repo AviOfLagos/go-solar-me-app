@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RefreshControl, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams } from "expo-router";
@@ -11,8 +11,9 @@ import { useCatalog } from "@/lib/catalog";
 import { useMe } from "@/lib/me";
 import { api, ApiError, errorMessage } from "@/lib/api";
 import { asString } from "@/lib/kit";
-import { sharePicture } from "@/lib/share";
-import { SITE } from "@/lib/config";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ShareSheet } from "@/components/ShareSheet";
+import { currentMoment, milestone } from "@/lib/moments";
 import { naira, isEmail, isName } from "@/shared/format";
 import { OCCASIONS, POOL } from "@/shared/store";
 import { colors, fonts } from "@/theme";
@@ -22,12 +23,21 @@ export default function PoolScreen() {
   const q = useLocalSearchParams<{ id: string; created?: string }>();
   const id = asString(q.id);
   const pool = usePool(id);
+  const [sheet, setSheet] = useState(false);
+  const [posted, setPosted] = useState<number | null>(null);
+  // The highest milestone this owner has already been asked to post about, kept per page on this phone.
+  useEffect(() => { void AsyncStorage.getItem(`gsm_posted_${id}`).then((v) => setPosted(Number(v) || 0)).catch(() => setPosted(0)); }, [id]);
 
   if (pool.isPending) return <Screen edges={[]}><Loading /></Screen>;
   if (pool.error) return <Screen edges={[]}><ErrorBox message={pool.error.message} onRetry={() => pool.refetch()} /></Screen>;
   const p = pool.data;
   const open = p.status === "open" || p.status === "ended";
-  const share = () => sharePicture("pool", p.id, p.kind === "squad" ? `Pay your share for "${p.title}":` : `Help with "${p.title}". Chip in any amount:`, `${SITE}/fund/${p.id}`);
+  const reached = milestone(p);
+  const askToPost = p.isOwner && open && posted !== null && reached > posted;
+  const closeSheet = (shared?: boolean) => {
+    setSheet(false);
+    if (shared || askToPost) { setPosted(reached); void AsyncStorage.setItem(`gsm_posted_${id}`, String(reached)).catch(() => {}); }
+  };
 
   const pct = Math.min(100, Math.floor((p.raised / p.goal) * 100));
   return (
@@ -57,8 +67,24 @@ export default function PoolScreen() {
           ))}
         </Row>
         <Small style={{ color: "#AEB8B1" }}>{p.status === "open" ? daysLeft(p.deadline) : POOL_STATUS[p.status]} · {p.supporters.length} supporter{p.supporters.length === 1 ? "" : "s"} · {p.lga}</Small>
-        <Button title="Share on WhatsApp" kind="sun" icon="logo-whatsapp" onPress={share} />
+        <Button title="Share this page" kind="sun" icon="share-outline" onPress={() => setSheet(true)} />
       </View>
+      {sheet ? <ShareSheet p={p} visible onClose={closeSheet} start={currentMoment(p)} /> : null}
+      {askToPost ? (
+        <Card highlight>
+          <H3>{reached}% there. Post an update?</H3>
+          <P>A fresh post at each milestone brings in new supporters. We've written it for you.</P>
+          <Button small kind="ink" title="Share the update" onPress={() => setSheet(true)} />
+          <Button small kind="ghost" title="Not now" onPress={() => closeSheet()} />
+        </Card>
+      ) : null}
+      {p.isOwner && p.status === "funded" && posted !== 100 ? (
+        <Card highlight>
+          <H3>Say thank you</H3>
+          <P>It's funded. A short thank-you post makes everyone who chipped in feel part of it.</P>
+          <Button small kind="ink" title="Share a thank-you" onPress={() => { setPosted(100); void AsyncStorage.setItem(`gsm_posted_${id}`, "100").catch(() => {}); setSheet(true); }} />
+        </Card>
+      ) : null}
 
       {p.isOwner ? <OwnerPanel p={p} onChange={() => pool.refetch()} /> : null}
       {open ? <Contribute p={p} /> : p.status === "funded" ? <Notice tone="leaf">Funded! {p.order ? `The order is ${p.order.status.replace(/_/g, " ")}.` : "We're placing the order."}</Notice> : <Notice>This page is closed. Everyone who chipped in was refunded.</Notice>}

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Linking, Pressable, View } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,6 +10,7 @@ import { waLink } from "@/lib/config";
 import { useAuth } from "@/stores/auth";
 import { useProfile } from "@/stores/profile";
 import { roleTitle } from "@/lib/roles";
+import { setUsageCounts, usageCountsOn } from "@/lib/track";
 import { colors, fonts } from "@/theme";
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -38,6 +40,7 @@ export default function MeTab() {
     await useAuth.getState().signOut();
   };
 
+  const [counts, setCounts] = useState(usageCountsOn());
   return (
     <Screen tab>
       <H1>{user ? `Hi, ${user.name.split(" ")[0] || "there"}` : "Me"}</H1>
@@ -54,6 +57,7 @@ export default function MeTab() {
         <Item icon="ticket-outline" title="Gift cards" sub="Buy one or check a balance" onPress={() => router.push("/gift-cards")} />
         <Item icon="calendar-outline" title="Pay small small" sub="Spread the cost with a partner lender" onPress={() => router.push("/pay-small-small")} />
         {user ? <Item icon="storefront-outline" title={store ? "My store" : "Sell & earn"} sub={store ? `/s/${store.slug}` : "Earn on every kit sold through your link"} onPress={() => router.push("/account/store")} /> : null}
+        <Item icon="analytics-outline" title="Usage counts" sub={counts ? "On: anonymous screen counts help us fix the app. Tap to turn off." : "Off. Tap to turn on."} onPress={() => { void setUsageCounts(!counts); setCounts(!counts); }} />
         <Item icon="logo-whatsapp" title="Help on WhatsApp" sub="A real person replies" onPress={() => Linking.openURL(waLink("Hi, I need help with the Go Solar Me app"))} />
       </Card>
       {user ? <Button title="Sign out" kind="ghost" onPress={signOut} /> : null}

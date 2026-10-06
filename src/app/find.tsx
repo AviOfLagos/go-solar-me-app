@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { track } from "@/lib/track";
 import { Linking, Pressable, ScrollView, Text, View } from "react-native";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -37,6 +38,8 @@ export default function Find() {
   const size = useMemo(() => sizeLoad(f.load, f.hours), [f.load, f.hours]);
   const picks = useMemo(() => (cat.data && size.running > 0 ? recommend(cat.data, size.kw, size.kwh, f.segment ?? undefined) : []), [cat.data, size, f.segment]);
   const fuel = fuelPerMonth(size.kw, f.hours);
+
+  useEffect(() => { track(`finder-step-${step}`); }, [step]);
 
   const back = () => {
     if (picking) return setPicking(false);

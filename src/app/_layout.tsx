@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Platform, View } from "react-native";
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
@@ -11,6 +11,7 @@ import {
   Manrope_300Light, Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold,
 } from "@expo-google-fonts/manrope";
 import { queryClient } from "@/lib/query";
+import { trackView } from "@/lib/track";
 import { useAuth } from "@/stores/auth";
 import { useProfile } from "@/stores/profile";
 import { openFromPush, registerForPush } from "@/lib/push";
@@ -28,6 +29,8 @@ export default function RootLayout() {
   const ready = authReady && hydrated;
   const user = useAuth((s) => s.user);
 
+  const pathname = usePathname();
+  useEffect(() => { trackView(pathname); }, [pathname]);
   useEffect(() => { void useAuth.getState().boot(); }, []);
   useEffect(() => {
     if ((fontsLoaded || fontError) && ready) void SplashScreen.hideAsync();

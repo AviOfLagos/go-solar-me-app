@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { track } from "@/lib/track";
 import { Linking, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import * as Clipboard from "expo-clipboard";
@@ -39,6 +40,7 @@ export default function Success() {
         if (!alive) return;
         setR(d);
         if (waiting(d) && tries.current++ < 12) { timer = setTimeout(check, 5000); return; }
+        if (d.paymentStatus === "succeeded" && d.ok !== false) track(d.kind === "contribution" ? "paid-chip-in" : "paid");
         if (d.kind === "order" && d.paymentStatus === "succeeded" && d.ok !== false) clear();
         if (d.kind === "order" && (d.paymentStatus === "canceled" || d.paymentStatus === "failed")) void cancelPayment(id, secret);
         void qc.invalidateQueries({ queryKey: ["myOrders"] });

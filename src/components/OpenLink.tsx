@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { track } from "@/lib/track";
 import { View } from "react-native";
 import { router } from "expo-router";
 import { Button, Field, Row } from "@/ui";
@@ -15,6 +16,7 @@ export function OpenLink({ label = "Got a link or code?", placeholder = "solar.n
     setBusy(true); setErr("");
     try {
       const to = await resolveLink(text);
+      track("link-opened");
       onOpened?.();
       router.push(to);
       setText("");

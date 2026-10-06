@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { Button, Loading, Money, P, Section, Small } from "@/ui";
+import { Button, ErrorBox, Loading, Money, P, Section, Small } from "@/ui";
 import { LinkRow, StartCard, Tile } from "@/components/Hero";
 import { ShareList } from "@/components/ShareList";
 import { useMyBuilds } from "@/lib/builds";
@@ -75,7 +75,7 @@ export function ProHome({ catalog }: { catalog: Catalog }) {
           <P>Sign in to keep every list you send in one place and get credit for the sales.</P>
           <Button title="Sign in" kind="ghost" small onPress={() => router.push("/sign-in")} />
         </View>
-      ) : builds.isPending ? <Loading /> : !list.length ? (
+      ) : builds.isPending ? <Loading /> : builds.error ? <ErrorBox message={`Couldn't load your lists. ${builds.error.message}`} onRetry={() => builds.refetch()} /> : !list.length ? (
         <Small>Nothing yet. Your first shared list will show here.</Small>
       ) : list.map((b) => (
         <Pressable key={b.id} onPress={() => router.push({ pathname: "/b/[id]", params: { id: b.id } })}

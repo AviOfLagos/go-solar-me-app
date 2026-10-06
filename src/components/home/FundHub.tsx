@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { Button, Loading, P, Progress, Section, Small } from "@/ui";
+import { Button, ErrorBox, Loading, P, Progress, Section, Small } from "@/ui";
 import { LinkRow, StartCard, Tile } from "@/components/Hero";
 import { useMine, POOL_STATUS } from "@/lib/pools";
 import { useAuth } from "@/stores/auth";
@@ -78,7 +78,7 @@ export function FundHub() {
           <P>Sign in to start a page and follow how it's going.</P>
           <Button title="Sign in" kind="ghost" small onPress={() => router.push("/sign-in")} />
         </View>
-      ) : mine.isPending ? <Loading /> : null}
+      ) : mine.isPending ? <Loading /> : mine.error ? <ErrorBox message={`Couldn't load your pages. ${mine.error.message}`} onRetry={() => mine.refetch()} /> : null}
       <LinkRow label="Open a page someone sent you" />
     </>
   );

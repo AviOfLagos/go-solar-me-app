@@ -2,12 +2,14 @@ import { Share } from "react-native";
 import * as Sharing from "expo-sharing";
 import { File, Paths } from "expo-file-system";
 import { API_BASE, SITE } from "./config";
+import { track } from "./track";
 
 /**
  * Shares one of the server-made milestone pictures with its link. Falls back to sharing the
  * link alone if the picture can't be downloaded.
  */
 export async function sharePicture(kind: "pool" | "order", id: string, text: string, link: string, format: "story" | "square" = "story") {
+  track(`share-${kind}`);
   const url = `${API_BASE}/share/${kind}/${encodeURIComponent(id)}?f=${format}`;
   try {
     if (await Sharing.isAvailableAsync()) {
@@ -21,4 +23,4 @@ export async function sharePicture(kind: "pool" | "order", id: string, text: str
   await Share.share({ message: `${text} ${link}` });
 }
 
-export const shareLink = (text: string, path: string) => Share.share({ message: `${text} ${SITE}${path}` });
+export const shareLink = (text: string, path: string) => (track("share-link"), Share.share({ message: `${text} ${SITE}${path}` }));

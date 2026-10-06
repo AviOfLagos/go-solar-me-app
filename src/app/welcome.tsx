@@ -12,6 +12,7 @@ import { ROLES, type Role } from "@/lib/roles";
 import { appleAvailable, signInWithApple, signInWithGoogle } from "@/lib/signin";
 import { errorMessage } from "@/lib/api";
 import { asString } from "@/lib/kit";
+import { track } from "@/lib/track";
 import { useProfile } from "@/stores/profile";
 import { useAuth } from "@/stores/auth";
 import { colors, fonts } from "@/theme";
@@ -43,6 +44,7 @@ export default function Welcome() {
   const chooseRole = () => {
     if (!pick) return;
     setRole(pick);
+    track(`role-${pick}`);
     if (changing) return router.back();
     if (user) return done();
     setStep("account");
