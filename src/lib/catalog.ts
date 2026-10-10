@@ -40,23 +40,25 @@ export const APPLIANCES = [
   { key: "bulb", label: "LED bulbs", w: 10, duty: 1, surge: 1 },
   { key: "fan", label: "Fans", w: 70, duty: 1, surge: 1 },
   { key: "laptop", label: "Laptops", w: 65, duty: 1, surge: 1 },
-  { key: "tv", label: "TV + decoder", w: 120, duty: 1, surge: 1 },
+  { key: "monitor", label: "Monitors", w: 30, duty: 1, surge: 1 },
   { key: "router", label: "Wi-Fi router", w: 15, duty: 1, surge: 1 },
+  { key: "tv", label: "TV + decoder", w: 120, duty: 1, surge: 1 },
   { key: "fridge", label: "Fridge", w: 150, duty: 0.45, surge: 3 },
   { key: "freezer", label: "Chest freezer", w: 200, duty: 0.5, surge: 3 },
   { key: "pump", label: "Water pump", w: 750, duty: 0.08, surge: 3 },
   { key: "ac", label: "AC (1HP)", w: 900, duty: 0.7, surge: 1.5 },
   { key: "clipper", label: "POS / clippers", w: 30, duty: 1, surge: 1 },
+  { key: "dryer", label: "Hair dryer", w: 1200, duty: 0.15, surge: 1 },
 ] as const;
 export type ApplianceKey = (typeof APPLIANCES)[number]["key"];
 export type Load = Record<ApplianceKey, number>;
 export const emptyLoad = Object.fromEntries(APPLIANCES.map((a) => [a.key, 0])) as Load;
 
-/** Same sizing rule as the website's power planner. */
+/** Same sizing rule as the website (rules v1, published at /api/v1/size). Keep the list and numbers in step with it. */
 export function sizeLoad(load: Load, hours: number) {
   let running = 0, energy = 0, surge = 0;
   for (const a of APPLIANCES) {
-    const n = load[a.key];
+    const n = load[a.key] ?? 0;
     running += a.w * n;
     energy += a.w * n * a.duty * hours;
     surge = Math.max(surge, n ? a.w * (a.surge - 1) : 0);
