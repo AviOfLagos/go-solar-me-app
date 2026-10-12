@@ -3,8 +3,12 @@ import { api } from "./api";
 import { useAuth } from "@/stores/auth";
 import type { Order, Pool, PoolSummary } from "./types";
 
+/** One Go Solar Me page. While it's taking money it refreshes every 20 seconds, so new gifts show up on their own. */
 export const usePool = (id: string) =>
-  useQuery({ queryKey: ["pool", id], queryFn: () => api<Pool>(`/pools/${encodeURIComponent(id)}`), enabled: !!id });
+  useQuery({
+    queryKey: ["pool", id], queryFn: () => api<Pool>(`/pools/${encodeURIComponent(id)}`), enabled: !!id,
+    refetchInterval: (q) => (q.state.data?.status === "open" ? 20_000 : false),
+  });
 
 /** My orders and my Go Solar Me pages (signed in only). */
 export function useMine() {

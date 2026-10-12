@@ -39,7 +39,10 @@ export type Pool = {
   goal: number; raised: number; status: "open" | "ended" | "funded" | "cancelled"; createdAt: string; deadline: string; extended: boolean;
   choiceEnds: string | null; items: { id: string; name: string; price: number; qty: number; funded: number }[];
   shares: { id: string; name: string; amount: number; paid: boolean }[];
+  /** Newest first. Anonymous gifts come back named "Someone kind". */
   supporters: { name: string; message: string; amount: number; at: string; piece: string | null }[];
+  /** Top named supporters by total given, largest first (anonymous gifts left out). */
+  leaders?: { name: string; total: number }[];
   order: { status: string } | null; isOwner: boolean; needsAddress: boolean;
 };
 

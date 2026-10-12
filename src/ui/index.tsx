@@ -22,13 +22,15 @@ export const Money = ({ n, style }: { n: number; style?: StyleProp<TextStyle> })
 
 /* ---------- layout ---------- */
 
-export function Screen({ children, scroll = true, edges = ["top"], contentStyle, refreshControl, footer, tab }: {
+export function Screen({ children, scroll = true, edges = ["top"], contentStyle, refreshControl, footer, tab, scrollRef }: {
   children: ReactNode; scroll?: boolean; edges?: Edge[]; contentStyle?: StyleProp<ViewStyle>;
   refreshControl?: ScrollViewProps["refreshControl"]; footer?: ReactNode;
   /** A tab screen: leaves room for the floating tab bar. */
   tab?: boolean;
+  /** Lets the screen scroll itself, e.g. a button that jumps to a form. */
+  scrollRef?: { current: ScrollView | null };
 }) {
-  const ref = useRef<ScrollView>(null);
+  const ref = useRef<ScrollView | null>(null);
   const y = useRef(0);
   // When the keyboard opens, lift the screen and scroll the field being typed in so it sits above the keyboard.
   useEffect(() => {
@@ -48,7 +50,7 @@ export function Screen({ children, scroll = true, edges = ["top"], contentStyle,
     <SafeAreaView style={s.screen} edges={edges}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         {scroll ? (
-          <ScrollView ref={ref} onScroll={(e) => { y.current = e.nativeEvent.contentOffset.y; }} scrollEventThrottle={32}
+          <ScrollView ref={(r) => { ref.current = r; if (scrollRef) scrollRef.current = r; }} onScroll={(e) => { y.current = e.nativeEvent.contentOffset.y; }} scrollEventThrottle={32}
             contentContainerStyle={[s.content, tab && { paddingBottom: TAB_SPACE }, contentStyle]} showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"} refreshControl={refreshControl}>
             {children}

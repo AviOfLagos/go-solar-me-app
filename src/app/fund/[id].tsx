@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { RefreshControl, Text, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { PanResponder, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -16,7 +16,7 @@ import { ShareSheet } from "@/components/ShareSheet";
 import { currentMoment, milestone } from "@/lib/moments";
 import { naira, isEmail, isName } from "@/shared/format";
 import { OCCASIONS, POOL } from "@/shared/store";
-import { colors, fonts } from "@/theme";
+import { colors, fonts, space } from "@/theme";
 import type { Pool, PayStart } from "@/lib/types";
 
 export default function PoolScreen() {
@@ -25,6 +25,16 @@ export default function PoolScreen() {
   const pool = usePool(id);
   const [sheet, setSheet] = useState(false);
   const [posted, setPosted] = useState<number | null>(null);
+  const [tab, setTab] = useState<Tab>("about");
+  // Only a pull shows the spinner; the 20-second background refresh stays quiet.
+  const [pulling, setPulling] = useState(false);
+  const scrollRef = useRef<ScrollView | null>(null);
+  const tabsY = useRef(0);
+  // Swipe left for supporters, right for the story. Only clearly sideways drags count, so scrolling still works.
+  const swipe = useMemo(() => PanResponder.create({
+    onMoveShouldSetPanResponder: (_e, g) => Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy) * 2,
+    onPanResponderRelease: (_e, g) => { if (g.dx < -50) setTab("supporters"); else if (g.dx > 50) setTab("about"); },
+  }), []);
   // The highest milestone this owner has already been asked to post about, kept per page on this phone.
   useEffect(() => { void AsyncStorage.getItem(`gsm_posted_${id}`).then((v) => setPosted(Number(v) || 0)).catch(() => setPosted(0)); }, [id]);
 
@@ -40,8 +50,13 @@ export default function PoolScreen() {
   };
 
   const pct = Math.min(100, Math.floor((p.raised / p.goal) * 100));
+  const chipIn = () => {
+    setTab("about");
+    requestAnimationFrame(() => scrollRef.current?.scrollTo({ y: Math.max(0, tabsY.current - space.sm), animated: true }));
+  };
   return (
-    <Screen edges={[]} refreshControl={<RefreshControl refreshing={pool.isRefetching} onRefresh={() => pool.refetch()} />}>
+    <Screen edges={[]} scrollRef={scrollRef} refreshControl={<RefreshControl refreshing={pulling} onRefresh={() => { setPulling(true); void pool.refetch().finally(() => setPulling(false)); }} />}
+      footer={open ? <Button title={p.kind === "squad" ? "Pay a share" : "Chip in"} icon="heart-outline" onPress={chipIn} /> : undefined}>
       <Stack.Screen options={{ title: p.kind === "squad" ? "Squad split" : "Go Solar Me" }} />
       {q.created ? <Notice tone="leaf">Your page is live. Share it on WhatsApp to get the first chip-in.</Notice> : null}
       <Small style={{ color: colors.mintDeep, fontFamily: fonts.sansSemiBold }}>{OCCASIONS.find((o) => o.slug === p.occasion)?.label ?? ""}</Small>
@@ -87,27 +102,78 @@ export default function PoolScreen() {
       ) : null}
 
       {p.isOwner ? <OwnerPanel p={p} onChange={() => pool.refetch()} /> : null}
-      {open ? <Contribute p={p} /> : p.status === "funded" ? <Notice tone="leaf">Funded! {p.order ? `The order is ${p.order.status.replace(/_/g, " ")}.` : "We're placing the order."}</Notice> : <Notice>This page is closed. Everyone who chipped in was refunded.</Notice>}
 
-      <P>{p.story}</P>
+      <View onLayout={(e) => { tabsY.current = e.nativeEvent.layout.y; }} accessibilityRole="tablist"
+        style={{ flexDirection: "row", padding: 4, borderRadius: 999, backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.line }}>
+        {TABS.map((t) => (
+          <Pressable key={t} accessibilityRole="tab" accessibilityState={{ selected: tab === t }} onPress={() => setTab(t)}
+            style={{ flex: 1, minHeight: 44, alignItems: "center", justifyContent: "center", borderRadius: 999, backgroundColor: tab === t ? colors.ink : "transparent" }}>
+            <Text style={{ fontFamily: fonts.sansBold, fontSize: 14, color: tab === t ? colors.paper : colors.ink }}>
+              {t === "about" ? "About" : `Supporters${p.supporters.length ? ` (${p.supporters.length})` : ""}`}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      <View {...swipe.panHandlers} style={{ gap: space.md }}>
+        {/* Both tabs stay mounted so a half-filled chip-in form survives a look at the supporters. */}
+        <View style={{ gap: space.md, display: tab === "about" ? "flex" : "none" }}>
+          {open ? <Contribute p={p} /> : p.status === "funded" ? <Notice tone="leaf">Funded! {p.order ? `The order is ${p.order.status.replace(/_/g, " ")}.` : "We're placing the order."}</Notice> : <Notice>This page is closed. Everyone who chipped in was refunded.</Notice>}
+          {p.story ? <P>{p.story}</P> : null}
+          <Card>
+            <H3>What this pays for</H3>
+            {p.items.map((i) => <Row key={i.id} style={{ justifyContent: "space-between" }}><P style={{ flex: 1 }}>{i.qty} × {i.name}</P><Small>{i.funded ? `${i.funded} funded` : ""}</Small></Row>)}
+          </Card>
+          <Small>Every naira goes to this kit, never cash. If it isn't funded, everyone is refunded.</Small>
+        </View>
+        <View style={{ gap: space.md, display: tab === "supporters" ? "flex" : "none" }}>
+          <Supporters p={p} onChipIn={open ? chipIn : undefined} />
+        </View>
+      </View>
+    </Screen>
+  );
+}
+
+type Tab = "about" | "supporters";
+const TABS: Tab[] = ["about", "supporters"];
+
+/** Top givers first, then everyone, newest first. Anonymous gifts show as "Someone kind". */
+function Supporters({ p, onChipIn }: { p: Pool; onChipIn?: () => void }) {
+  const n = p.supporters.length;
+  const leaders = (p.leaders ?? []).slice(0, 3);
+  if (!n) {
+    return (
       <Card>
-        <H3>The kit</H3>
-        {p.items.map((i) => <Row key={i.id} style={{ justifyContent: "space-between" }}><P style={{ flex: 1 }}>{i.qty} × {i.name}</P><Small>{i.funded ? `${i.funded} funded` : ""}</Small></Row>)}
+        <H3>No one has chipped in yet</H3>
+        <P>The first gift gets things moving. Every amount counts.</P>
+        {onChipIn ? <Button small kind="sun" title="Be the first" onPress={onChipIn} /> : null}
       </Card>
-      {p.supporters.length ? (
-        <Card>
-          <H3>Supporters</H3>
-          {p.supporters.map((x, k) => (
-            <View key={k} style={{ gap: 2, paddingVertical: 4 }}>
-              <Row style={{ justifyContent: "space-between" }}><P style={{ color: colors.ink }}>{x.name}</P><Money n={x.amount} style={{ fontSize: 14 }} /></Row>
-              {x.piece ? <Small>Funded: {x.piece}</Small> : null}
-              {x.message ? <Small>“{x.message}”</Small> : null}
+    );
+  }
+  return (
+    <>
+      <H3>{n} {n === 1 ? "gift" : "gifts"} so far</H3>
+      {leaders.length ? (
+        <View style={{ flexDirection: "row", gap: space.sm }} accessibilityLabel="Top supporters">
+          {leaders.map((l, i) => (
+            <View key={l.name} style={{ flex: 1, minWidth: 0, gap: 2, padding: 12, borderRadius: 20, backgroundColor: i === 0 ? colors.night : colors.paper, borderWidth: i === 0 ? 0 : 1, borderColor: colors.line }}>
+              <Small style={{ fontFamily: fonts.sansBold, color: i === 0 ? colors.mint : colors.mute }}>#{i + 1}</Small>
+              <Text numberOfLines={1} style={{ fontFamily: fonts.sansSemiBold, fontSize: 14, color: i === 0 ? colors.paper : colors.ink }}>{l.name}</Text>
+              <Text numberOfLines={1} style={{ fontFamily: fonts.sansBold, fontSize: 14, color: i === 0 ? colors.mint : colors.ink }}>{naira(l.total)}</Text>
             </View>
           ))}
-        </Card>
+        </View>
       ) : null}
-      <Small>Every naira goes to this kit, never cash. If it isn't funded, everyone is refunded.</Small>
-    </Screen>
+      <Card>
+        {p.supporters.map((x, k) => (
+          <View key={k} style={{ gap: 2, paddingVertical: 6, borderTopWidth: k ? 1 : 0, borderTopColor: colors.line }}>
+            <Row style={{ justifyContent: "space-between" }}><P style={{ flex: 1, color: colors.ink }} numberOfLines={1}>{x.name}</P><Money n={x.amount} style={{ fontSize: 14 }} /></Row>
+            {x.piece ? <Small>Funded: {x.piece}</Small> : null}
+            {x.message ? <Small>“{x.message}”</Small> : null}
+          </View>
+        ))}
+      </Card>
+    </>
   );
 }
 
